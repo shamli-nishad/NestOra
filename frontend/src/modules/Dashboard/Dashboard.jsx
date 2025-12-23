@@ -163,18 +163,18 @@ const Dashboard = () => {
                         <Plus size={20} />
                         <span>Add Chore</span>
                     </button>
-                    <button className="action-btn card" onClick={() => navigate('/groceries', { state: { openAddModal: true } })}>
+                    {/* <button className="action-btn card" onClick={() => navigate('/groceries', { state: { openAddModal: true } })}>
                         <ShoppingBag size={20} />
                         <span>Add Expense</span>
-                    </button>
+                    </button> */}
                     <button className="action-btn card" onClick={() => navigate('/groceries', { state: { openPlanModal: true } })}>
                         <ShoppingCart size={20} />
                         <span>Plan Shopping</span>
                     </button>
-                    <button className="action-btn card" onClick={() => navigate('/bills', { state: { openAddModal: true } })}>
+                    {/* <button className="action-btn card" onClick={() => navigate('/bills', { state: { openAddModal: true } })}>
                         <CreditCard size={20} />
                         <span>Add Bill</span>
-                    </button>
+                    </button> */}
                     <button className="action-btn card" onClick={() => setIsCookModalOpen(true)}>
                         <CookingPot size={20} />
                         <span>Cook</span>

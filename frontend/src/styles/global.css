@@ -16,7 +16,7 @@ body {
 
 .layout {
     display: flex;
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
@@ -25,6 +25,7 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    height: 100dvh;
     background-color: var(--bg-main);
 }
 

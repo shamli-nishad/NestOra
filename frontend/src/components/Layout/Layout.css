@@ -3,7 +3,8 @@
     justify-content: center;
     background-color: #f8fafc;
     /* Lighter background for desktop */
-    min-height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
 }
 
 .sidebar {
@@ -16,7 +17,7 @@
     background-color: var(--bg-main);
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100dvh;
     position: relative;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.05);
 }
