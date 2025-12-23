@@ -29,14 +29,14 @@ const BottomNav = () => {
                 <Utensils size={20} />
                 <span>Meals</span>
             </NavLink>
-            <NavLink to="/bills" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+            {/* <NavLink to="/bills" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
                 <CreditCard size={20} />
                 <span>Bills</span>
-            </NavLink>
-            <NavLink to="/schedule" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+            </NavLink> */}
+            {/* <NavLink to="/schedule" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
                 <Calendar size={20} />
                 <span>Schedule</span>
-            </NavLink>
+            </NavLink> */}
         </nav>
     );
 };
