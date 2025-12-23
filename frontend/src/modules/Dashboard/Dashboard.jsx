@@ -116,7 +116,7 @@ const Dashboard = () => {
                             <span className="value">{summary.pendingChores}</span>
                         </div>
                     </div>
-                    <div className="summary-card card" onClick={() => navigate('/bills')}>
+                    {/* <div className="summary-card card" onClick={() => navigate('/bills')}>
                         <div className="icon-box bills">
                             <AlertCircle size={20} />
                         </div>
@@ -124,7 +124,7 @@ const Dashboard = () => {
                             <span className="label">Overdue Bills</span>
                             <span className="value">{summary.overdueBills}</span>
                         </div>
-                    </div>
+                    </div> */}
                     <div className="summary-card card" onClick={() => navigate('/groceries')}>
                         <div className="icon-box inventory">
                             <Package size={20} />
