@@ -8,7 +8,8 @@ import {
     Plus,
     Utensils,
     ShoppingBag,
-    CreditCard
+    CreditCard,
+    ShoppingCart
 } from 'lucide-react';
 import './Dashboard.css';
 
@@ -18,7 +19,8 @@ const Dashboard = () => {
         pendingChores: 0,
         overdueBills: 0,
         lowInventory: 0,
-        monthlySpend: 0
+        monthlySpend: 0,
+        pendingShopping: 0
     });
 
     useEffect(() => {
@@ -39,11 +41,14 @@ const Dashboard = () => {
             .filter(e => e.date && new Date(e.date) >= firstDayOfMonth)
             .reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
+        const pendingShoppingCount = JSON.parse(localStorage.getItem('nestora_shopping_sessions') || '[]').length;
+
         setSummary({
             pendingChores: pendingChoresCount,
             overdueBills: overdueBillsCount,
             lowInventory: lowInventoryCount,
-            monthlySpend: monthlySpendSum
+            monthlySpend: monthlySpendSum,
+            pendingShopping: pendingShoppingCount
         });
     }, []);
 
@@ -80,6 +85,15 @@ const Dashboard = () => {
                             <span className="value">{summary.lowInventory}</span>
                         </div>
                     </div>
+                    <div className="summary-card card" onClick={() => navigate('/groceries', { state: { activeTab: 'shopping' } })}>
+                        <div className="icon-box shopping">
+                            <ShoppingCart size={20} />
+                        </div>
+                        <div className="info">
+                            <span className="label">Pending Shopping</span>
+                            <span className="value">{summary.pendingShopping}</span>
+                        </div>
+                    </div>
                     <div className="summary-card card">
                         <div className="icon-box spend">
                             <DollarSign size={20} />
@@ -107,6 +121,10 @@ const Dashboard = () => {
                     <button className="action-btn card" onClick={() => navigate('/groceries', { state: { openAddModal: true } })}>
                         <ShoppingBag size={20} />
                         <span>Add Expense</span>
+                    </button>
+                    <button className="action-btn card" onClick={() => navigate('/groceries', { state: { openPlanModal: true } })}>
+                        <ShoppingCart size={20} />
+                        <span>Plan Shopping</span>
                     </button>
                     <button className="action-btn card" onClick={() => navigate('/bills', { state: { openAddModal: true } })}>
                         <CreditCard size={20} />

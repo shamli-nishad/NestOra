@@ -55,6 +55,11 @@
     background-color: #f59e0b;
 }
 
+.icon-box.shopping {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
 .icon-box.spend {
     background-color: #10b981;
 }

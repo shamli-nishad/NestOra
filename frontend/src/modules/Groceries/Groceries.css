@@ -58,6 +58,87 @@
     animation: slideUp 0.3s ease-out;
 }
 
+.sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.list-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.sessions-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.session-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-lg);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.session-item:active {
+    transform: scale(0.98);
+}
+
+.session-item .info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.shop-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.shop-info h4 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.session-item p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.status-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    width: fit-content;
+}
+
+.status-badge.planning {
+    background-color: #f1f5f9;
+    color: #64748b;
+}
+
+.status-badge.active {
+    background-color: #f0fdf4;
+    color: #16a34a;
+}
+
+.delete-btn {
+    padding: 8px;
+}
+
 .session-card {
     padding: var(--space-xl);
 }
@@ -95,7 +176,7 @@
     gap: var(--space-sm);
 }
 
-.shopping-row span {
+.shopping-row .name {
     font-weight: 600;
     font-size: 0.95rem;
 }
@@ -112,4 +193,83 @@
     border-radius: var(--radius-md);
     background-color: #f8fafc;
     font-size: 0.9rem;
+}
+
+.planning-view,
+.execution-view {
+    padding: var(--space-xl);
+}
+
+.shop-select,
+.on-the-go-select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background-color: #f8fafc;
+    font-size: 0.95rem;
+    font-family: inherit;
+    margin-top: 4px;
+}
+
+.selection-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.selection-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background-color: #f8fafc;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.selection-item.selected {
+    background-color: #f0fdf4;
+    border-color: #10b981;
+}
+
+.selection-item span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.item-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.on-the-go-badge {
+    font-size: 0.65rem;
+    background-color: #fef3c7;
+    color: #92400e;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.add-on-the-go {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--border);
+}
+
+.add-on-the-go label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
