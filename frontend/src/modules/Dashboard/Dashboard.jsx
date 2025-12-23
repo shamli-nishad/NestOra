@@ -9,7 +9,8 @@ import {
     Utensils,
     ShoppingBag,
     CreditCard,
-    ShoppingCart
+    ShoppingCart,
+    CookingPot
 } from 'lucide-react';
 import './Dashboard.css';
 
@@ -22,13 +23,20 @@ const Dashboard = () => {
         monthlySpend: 0,
         pendingShopping: 0
     });
+    const [isCookModalOpen, setIsCookModalOpen] = useState(false);
+    const [recipes, setRecipes] = useState([]);
+    const [inventory, setInventory] = useState([]);
 
     useEffect(() => {
         // Fetch data from localStorage
         const chores = JSON.parse(localStorage.getItem('nestora_chores') || '[]');
         const bills = JSON.parse(localStorage.getItem('nestora_bills') || '[]');
-        const inventory = JSON.parse(localStorage.getItem('nestora_inventory') || '[]');
+        const inventoryData = JSON.parse(localStorage.getItem('nestora_inventory') || '[]');
         const expenses = JSON.parse(localStorage.getItem('nestora_expenses') || '[]');
+        const recipesData = JSON.parse(localStorage.getItem('nestora_recipes') || '[]');
+
+        setInventory(inventoryData);
+        setRecipes(recipesData);
 
         // Calculate Summary
         const now = new Date();
@@ -51,6 +59,47 @@ const Dashboard = () => {
             pendingShopping: pendingShoppingCount
         });
     }, []);
+
+    const handleLogCook = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const recipeId = formData.get('recipeId');
+        const comments = formData.get('comments');
+        const dateTime = formData.get('dateTime');
+
+        const recipe = recipes.find(r => r.id === recipeId);
+        if (!recipe) return;
+
+        const historyEntry = {
+            id: crypto.randomUUID(),
+            recipeId: recipe.id,
+            recipeTitle: recipe.title,
+            comments: comments,
+            date: new Date(dateTime).toISOString()
+        };
+
+        const existingHistory = JSON.parse(localStorage.getItem('nestora_cooking_history') || '[]');
+        const updatedHistory = [historyEntry, ...existingHistory];
+        localStorage.setItem('nestora_cooking_history', JSON.stringify(updatedHistory));
+
+        // Reduce inventory
+        let updatedInventory = [...inventory];
+        recipe.ingredients?.forEach(ing => {
+            const invIndex = updatedInventory.findIndex(i => i.itemId === ing.itemId);
+            if (invIndex !== -1) {
+                updatedInventory[invIndex] = {
+                    ...updatedInventory[invIndex],
+                    quantity: Math.max(0, updatedInventory[invIndex].quantity - 1)
+                };
+            }
+        });
+        const finalInventory = updatedInventory.filter(i => i.quantity > 0);
+        setInventory(finalInventory);
+        localStorage.setItem('nestora_inventory', JSON.stringify(finalInventory));
+
+        setIsCookModalOpen(false);
+        alert(`Logged "${recipe.title}"! Inventory updated.`);
+    };
 
     return (
         <div className="page dashboard-page">
@@ -114,10 +163,6 @@ const Dashboard = () => {
                         <Plus size={20} />
                         <span>Add Chore</span>
                     </button>
-                    <button className="action-btn card" onClick={() => navigate('/meals', { state: { openAddModal: true } })}>
-                        <Utensils size={20} />
-                        <span>Add Meal</span>
-                    </button>
                     <button className="action-btn card" onClick={() => navigate('/groceries', { state: { openAddModal: true } })}>
                         <ShoppingBag size={20} />
                         <span>Add Expense</span>
@@ -130,8 +175,53 @@ const Dashboard = () => {
                         <CreditCard size={20} />
                         <span>Add Bill</span>
                     </button>
+                    <button className="action-btn card" onClick={() => setIsCookModalOpen(true)}>
+                        <CookingPot size={20} />
+                        <span>Cook</span>
+                    </button>
+                    <button className="action-btn card" onClick={() => navigate('/meals', { state: { openAddModal: true } })}>
+                        <Utensils size={20} />
+                        <span>Add Recipe</span>
+                    </button>
                 </div>
             </div>
+
+            {isCookModalOpen && (
+                <div className="modal-overlay" onClick={() => setIsCookModalOpen(false)}>
+                    <div className="bottom-sheet" onClick={e => e.stopPropagation()}>
+                        <div className="sheet-handle"></div>
+                        <h2>Log Cooking</h2>
+                        <form onSubmit={handleLogCook}>
+                            <div className="form-group">
+                                <label>What did you cook?</label>
+                                <select name="recipeId" required>
+                                    <option value="">Select a recipe...</option>
+                                    {recipes.map(r => (
+                                        <option key={r.id} value={r.id}>{r.title}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Date & Time</label>
+                                <input
+                                    type="datetime-local"
+                                    name="dateTime"
+                                    defaultValue={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Comments</label>
+                                <textarea name="comments" rows="2" placeholder="Any notes about today's cooking?"></textarea>
+                            </div>
+                            <div className="modal-actions">
+                                <button type="button" className="btn-secondary" onClick={() => setIsCookModalOpen(false)}>Cancel</button>
+                                <button type="submit" className="btn-primary flex-1">Log Cooking</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

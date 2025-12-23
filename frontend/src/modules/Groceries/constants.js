@@ -17,6 +17,7 @@ export const SHOP_LIST = [
     'Target',
     'Indian Market',
     'Local Market',
+    'Walmart',
     'Other'
 ];
 
