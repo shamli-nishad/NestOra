@@ -1,25 +1,32 @@
 import React from 'react';
 import Sidebar from './Sidebar';
+import BottomNav from './BottomNav';
+import { Search, Bell } from 'lucide-react';
 import './Layout.css';
 
 const Layout = ({ children }) => {
     return (
         <div className="layout">
             <Sidebar />
-            <main className="main-content">
+            <div className="main-content">
                 <header className="header">
                     <div className="header-search">
-                        <input type="text" placeholder="Search everything..." />
+                        <Search size={18} />
+                        <input type="text" placeholder="Search anything..." />
                     </div>
                     <div className="header-user">
-                        <span>Admin</span>
+                        <div className="notifications">
+                            <Bell size={20} />
+                            <span className="badge"></span>
+                        </div>
                         <div className="avatar">A</div>
                     </div>
                 </header>
-                <div className="content-area">
+                <main className="content-area">
                     {children}
-                </div>
-            </main>
+                </main>
+            </div>
+            <BottomNav />
         </div>
     );
 };

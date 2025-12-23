@@ -35,7 +35,8 @@ input,
 textarea,
 select {
     font-family: inherit;
-    font-size: 1rem;
+    font-size: 16px !important;
+    /* Prevent iOS zoom */
 }
 
 .container {
@@ -69,6 +70,7 @@ select {
 
 .page {
     animation: fadeIn 0.3s ease-out;
+    padding-bottom: calc(var(--space-xl) + env(safe-area-inset-bottom));
 }
 
 .card,
@@ -79,35 +81,32 @@ select {
     animation: slideUp 0.4s ease-out;
 }
 
+/* Mobile Optimizations */
+button,
+.nav-item,
+.bottom-nav-item,
+.btn,
+.btn-icon {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .layout {
         flex-direction: column;
     }
 
-    .sidebar {
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .sidebar-nav {
-        flex-direction: row;
-        overflow-x: auto;
-        padding: var(--space-sm);
-    }
-
-    .nav-item {
-        padding: var(--space-sm) var(--space-md);
-        flex-direction: column;
-        gap: 4px;
-        font-size: 0.75rem;
-        white-space: nowrap;
-    }
-
     .main-content {
-        height: calc(100vh - 120px);
+        height: 100vh;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
     }
 }
 
