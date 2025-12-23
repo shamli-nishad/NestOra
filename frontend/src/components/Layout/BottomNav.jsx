@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-    LayoutDashboard,
+    Home,
     CheckSquare,
     ShoppingBag,
     Utensils,
@@ -11,27 +11,32 @@ import {
 import './BottomNav.css';
 
 const BottomNav = () => {
-    const navItems = [
-        { path: '/', icon: <LayoutDashboard size={24} />, label: 'Home' },
-        { path: '/chores', icon: <CheckSquare size={24} />, label: 'Chores' },
-        { path: '/groceries', icon: <ShoppingBag size={24} />, label: 'Shop' },
-        { path: '/meals', icon: <Utensils size={24} />, label: 'Meals' },
-        { path: '/bills', icon: <CreditCard size={24} />, label: 'Bills' },
-        { path: '/schedule', icon: <Calendar size={24} />, label: 'Plan' },
-    ];
-
     return (
         <nav className="bottom-nav">
-            {navItems.map((item) => (
-                <NavLink
-                    key={item.path}
-                    to={item.path}
-                    className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
-                >
-                    {item.icon}
-                    <span>{item.label}</span>
-                </NavLink>
-            ))}
+            <NavLink to="/" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <Home size={20} />
+                <span>Home</span>
+            </NavLink>
+            <NavLink to="/chores" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <CheckSquare size={20} />
+                <span>Chores</span>
+            </NavLink>
+            <NavLink to="/groceries" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <ShoppingBag size={20} />
+                <span>Groceries</span>
+            </NavLink>
+            <NavLink to="/meals" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <Utensils size={20} />
+                <span>Meals</span>
+            </NavLink>
+            <NavLink to="/bills" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <CreditCard size={20} />
+                <span>Bills</span>
+            </NavLink>
+            <NavLink to="/schedule" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <Calendar size={20} />
+                <span>Schedule</span>
+            </NavLink>
         </nav>
     );
 };

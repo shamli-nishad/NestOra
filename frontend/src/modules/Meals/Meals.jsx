@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Utensils, History, Check, Trash2, Edit2, ChevronRight } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Plus, Utensils, History, Check, Trash2, Edit2, ChevronRight, Clock, Users } from 'lucide-react';
 import './Meals.css';
 
 const Meals = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('recipes'); // recipes, history
     const [recipes, setRecipes] = useState(() => {
         const saved = localStorage.getItem('nestora_recipes');
@@ -24,16 +27,19 @@ const Meals = () => {
     const [currentRecipe, setCurrentRecipe] = useState(null);
 
     useEffect(() => {
+        if (location.state?.openAddModal) {
+            setIsModalOpen(true);
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
+
+    useEffect(() => {
         localStorage.setItem('nestora_recipes', JSON.stringify(recipes));
     }, [recipes]);
 
     useEffect(() => {
         localStorage.setItem('nestora_cooking_history', JSON.stringify(history));
     }, [history]);
-
-    useEffect(() => {
-        localStorage.setItem('nestora_inventory', JSON.stringify(inventory));
-    }, [inventory]);
 
     const handleAddRecipe = (e) => {
         e.preventDefault();
@@ -42,6 +48,7 @@ const Meals = () => {
             id: currentRecipe ? currentRecipe.id : crypto.randomUUID(),
             title: formData.get('title'),
             cookTime: formData.get('cookTime'),
+            servings: formData.get('servings') || 2,
             ingredients: currentRecipe ? currentRecipe.ingredients : [],
             steps: formData.get('steps').split('\n').filter(s => s.trim()),
             createdAt: currentRecipe ? currentRecipe.createdAt : new Date().toISOString(),
@@ -57,7 +64,6 @@ const Meals = () => {
     };
 
     const markAsCooked = (recipe) => {
-        // 1. Log to history
         const historyEntry = {
             id: crypto.randomUUID(),
             recipeId: recipe.id,
@@ -66,7 +72,7 @@ const Meals = () => {
         };
         setHistory([historyEntry, ...history]);
 
-        // 2. Reduce inventory (simplified logic: reduce 1 unit for each ingredient if exists)
+        // Reduce inventory
         let updatedInventory = [...inventory];
         recipe.ingredients.forEach(ing => {
             const invIndex = updatedInventory.findIndex(i => i.itemId === ing.itemId);
@@ -78,144 +84,105 @@ const Meals = () => {
             }
         });
         setInventory(updatedInventory.filter(i => i.quantity > 0));
+        localStorage.setItem('nestora_inventory', JSON.stringify(updatedInventory.filter(i => i.quantity > 0)));
 
         alert(`Marked "${recipe.title}" as cooked. Inventory updated!`);
     };
 
-    const addIngredient = (recipeId, itemId, quantity) => {
-        const item = masterItems.find(i => i.id === itemId);
-        if (!item) return;
-
-        setRecipes(recipes.map(r => {
-            if (r.id === recipeId) {
-                return {
-                    ...r,
-                    ingredients: [...r.ingredients, { itemId, name: item.name, quantity, unit: item.defaultUnit }]
-                };
-            }
-            return r;
-        }));
+    const handleCancel = () => {
+        setIsModalOpen(false);
+        setCurrentRecipe(null);
+        if (location.state?.openAddModal) {
+            navigate(-1);
+        }
     };
 
     return (
         <div className="page meals-page">
-            <div className="page-header">
-                <div>
-                    <h1>Meal Planning & Recipes</h1>
-                    <p>Plan your meals and track what you cook</p>
-                </div>
-                <div className="header-actions">
-                    <div className="tabs">
-                        <button className={`tab ${activeTab === 'recipes' ? 'active' : ''}`} onClick={() => setActiveTab('recipes')}>Recipes</button>
-                        <button className={`tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>Cooking History</button>
-                    </div>
-                    <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-                        <Plus size={20} />
-                        <span>Add Recipe</span>
-                    </button>
-                </div>
+
+            <div className="segmented-control">
+                <button className={`segment ${activeTab === 'recipes' ? 'active' : ''}`} onClick={() => setActiveTab('recipes')}>Recipes</button>
+                <button className={`segment ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>History</button>
             </div>
 
             {activeTab === 'recipes' && (
-                <div className="recipes-grid">
+                <div className="recipe-list">
                     {recipes.length === 0 ? (
-                        <div className="empty-state"><Utensils size={48} /><p>No recipes yet. Add your first one!</p></div>
+                        <div className="empty-state"><Utensils size={48} color="#cbd5e1" /><p>No recipes yet.</p></div>
                     ) : (
                         recipes.map(recipe => (
-                            <div key={recipe.id} className="recipe-card">
+                            <div key={recipe.id} className="recipe-card card">
                                 <div className="recipe-info">
                                     <h3>{recipe.title}</h3>
-                                    <p className="meta">{recipe.cookTime} mins • {recipe.ingredients.length} ingredients</p>
-                                    <div className="recipe-ingredients">
+                                    <div className="meta">
+                                        <span><Clock size={14} /> {recipe.cookTime}m</span>
+                                        <span><Users size={14} /> {recipe.servings} servings</span>
+                                    </div>
+                                    <div className="ingredients-preview">
                                         {recipe.ingredients.slice(0, 3).map((ing, i) => (
                                             <span key={i} className="ing-tag">{ing.name}</span>
                                         ))}
-                                        {recipe.ingredients.length > 3 && <span>+{recipe.ingredients.length - 3} more</span>}
+                                        {recipe.ingredients.length > 3 && <span className="more">+{recipe.ingredients.length - 3}</span>}
                                     </div>
                                 </div>
                                 <div className="recipe-actions">
-                                    <button className="btn btn-success btn-sm" onClick={() => markAsCooked(recipe)}>
-                                        <Check size={16} /> Mark Cooked
+                                    <button className="btn-success-sm" onClick={() => markAsCooked(recipe)}>
+                                        <Check size={16} /> Cooked
                                     </button>
-                                    <button className="btn-icon" onClick={() => { setCurrentRecipe(recipe); setIsModalOpen(true); }}><Edit2 size={18} /></button>
+                                    <button className="btn-icon" onClick={() => { setCurrentRecipe(recipe); setIsModalOpen(true); }}>
+                                        <Edit2 size={18} color="#94a3b8" />
+                                    </button>
                                 </div>
                             </div>
                         ))
                     )}
+                    <button className="fab-add" onClick={() => setIsModalOpen(true)}>
+                        <Plus size={24} color="white" />
+                    </button>
                 </div>
             )}
 
             {activeTab === 'history' && (
                 <div className="history-list">
-                    {history.length === 0 ? (
-                        <div className="empty-state"><History size={48} /><p>No cooking history yet.</p></div>
-                    ) : (
-                        history.map(entry => (
-                            <div key={entry.id} className="history-item">
-                                <div className="history-info">
-                                    <strong>{entry.recipeTitle}</strong>
-                                    <span>{new Date(entry.date).toLocaleDateString()} at {new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                </div>
-                                <ChevronRight size={20} className="text-muted" />
+                    {history.map(entry => (
+                        <div key={entry.id} className="history-item card">
+                            <div className="info">
+                                <h3>{entry.recipeTitle}</h3>
+                                <p>{new Date(entry.date).toLocaleDateString()} at {new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                             </div>
-                        ))
-                    )}
+                            <ChevronRight size={20} color="#cbd5e1" />
+                        </div>
+                    ))}
                 </div>
             )}
 
             {isModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal">
+                <div className="modal-overlay" onClick={handleCancel}>
+                    <div className="bottom-sheet" onClick={e => e.stopPropagation()}>
+                        <div className="sheet-handle"></div>
                         <h2>{currentRecipe ? 'Edit Recipe' : 'Add New Recipe'}</h2>
                         <form onSubmit={handleAddRecipe}>
                             <div className="form-group">
                                 <label>Recipe Title</label>
-                                <input name="title" defaultValue={currentRecipe?.title} required placeholder="e.g. Chicken Stir Fry" />
+                                <input name="title" defaultValue={currentRecipe?.title} required placeholder="e.g. Pasta Carbonara" autoFocus />
                             </div>
-                            <div className="form-group">
-                                <label>Cook Time (minutes)</label>
-                                <input type="number" name="cookTime" defaultValue={currentRecipe?.cookTime || 30} required />
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Cook Time (m)</label>
+                                    <input type="number" name="cookTime" defaultValue={currentRecipe?.cookTime || 30} required />
+                                </div>
+                                <div className="form-group">
+                                    <label>Servings</label>
+                                    <input type="number" name="servings" defaultValue={currentRecipe?.servings || 2} required />
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label>Steps (one per line)</label>
-                                <textarea name="steps" defaultValue={currentRecipe?.steps.join('\n')} rows="4" placeholder="1. Cut chicken..."></textarea>
+                                <textarea name="steps" defaultValue={currentRecipe?.steps.join('\n')} rows="4" placeholder="1. Boil water..."></textarea>
                             </div>
-
-                            {!currentRecipe && (
-                                <p className="hint">You can add ingredients after creating the recipe.</p>
-                            )}
-
-                            {currentRecipe && (
-                                <div className="ingredient-manager">
-                                    <label>Ingredients</label>
-                                    <div className="ingredient-list">
-                                        {currentRecipe.ingredients.map((ing, i) => (
-                                            <div key={i} className="ing-row">
-                                                <span>{ing.name}</span>
-                                                <span>{ing.quantity} {ing.unit}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="add-ing-form">
-                                        <select id="ing-select">
-                                            <option value="">Select Item...</option>
-                                            {masterItems.map(item => (
-                                                <option key={item.id} value={item.id}>{item.name}</option>
-                                            ))}
-                                        </select>
-                                        <input type="number" id="ing-qty" placeholder="Qty" style={{ width: '60px' }} />
-                                        <button type="button" onClick={() => {
-                                            const itemId = document.getElementById('ing-select').value;
-                                            const qty = document.getElementById('ing-qty').value;
-                                            if (itemId && qty) addIngredient(currentRecipe.id, itemId, parseFloat(qty));
-                                        }}>Add</button>
-                                    </div>
-                                </div>
-                            )}
-
                             <div className="modal-actions">
-                                <button type="button" className="btn" onClick={() => { setIsModalOpen(false); setCurrentRecipe(null); }}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">{currentRecipe ? 'Update' : 'Create'}</button>
+                                <button type="button" className="btn-secondary full-width" onClick={handleCancel}>Cancel</button>
+                                <button type="submit" className="btn-primary full-width">{currentRecipe ? 'Update' : 'Create Recipe'}</button>
                             </div>
                         </form>
                     </div>

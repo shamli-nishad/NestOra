@@ -1,123 +1,137 @@
+.schedule-page {
+    padding-bottom: 100px;
+}
+
 .timeline {
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
+    gap: var(--space-lg);
     position: relative;
-    padding-left: 100px;
+    padding-left: 20px;
 }
 
 .timeline::before {
     content: '';
     position: absolute;
-    left: 80px;
+    left: 27px;
     top: 0;
     bottom: 0;
     width: 2px;
-    background-color: var(--border);
+    background-color: var(--border-light);
 }
 
 .timeline-item {
     display: flex;
+    gap: var(--space-lg);
+    align-items: flex-start;
+}
+
+.time-col {
+    width: 50px;
+    padding-top: 12px;
+    text-align: right;
+}
+
+.time {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.event-card {
+    flex: 1;
+    padding: var(--space-lg);
+    display: flex;
+    justify-content: space-between;
     align-items: center;
     position: relative;
 }
 
-.timeline-item .time {
-    position: absolute;
-    left: -100px;
-    width: 80px;
-    text-align: right;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-muted);
-}
-
-.timeline-item::after {
+.event-card::before {
     content: '';
     position: absolute;
     left: -24px;
-    width: 10px;
-    height: 10px;
+    top: 18px;
+    width: 12px;
+    height: 12px;
     background-color: var(--primary);
     border-radius: 50%;
-    border: 2px solid white;
+    border: 3px solid var(--bg-main);
     z-index: 1;
 }
 
-.event-card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: var(--space-md) var(--space-lg);
-    flex: 1;
-    box-shadow: var(--shadow-sm);
+.event-card.health::before {
+    background-color: var(--danger);
 }
 
-.event-card h3 {
+.event-card.social::before {
+    background-color: var(--success);
+}
+
+.event-info h3 {
     font-size: 1rem;
+    font-weight: 700;
     margin-bottom: 4px;
 }
 
-.event-card .meta {
-    display: flex;
-    gap: var(--space-md);
-    font-size: 0.75rem;
+.type-tag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
     color: var(--text-muted);
 }
 
-.type-tag {
-    text-transform: capitalize;
-    background-color: #f1f5f9;
-    padding: 1px 6px;
+.health-metrics {
+    display: flex;
+    gap: var(--space-md);
+    margin-top: 8px;
+}
+
+.health-metrics span {
+    font-size: 0.8rem;
+    font-weight: 600;
+    background-color: #fee2e2;
+    color: #dc2626;
+    padding: 2px 8px;
     border-radius: 4px;
 }
 
-.health-card {
-    flex-direction: column;
-    align-items: stretch;
-}
-
-.health-card .card-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: var(--space-md);
-}
-
-.health-card .metrics {
-    display: flex;
-    gap: var(--space-xl);
-    margin-bottom: var(--space-md);
-    background-color: #f8fafc;
-    padding: var(--space-md);
-    border-radius: var(--radius-md);
-}
-
-.metric {
+.contacts-list {
     display: flex;
     flex-direction: column;
+    gap: var(--space-md);
 }
 
-.metric span {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-.social-card {
+.contact-card {
     padding: var(--space-lg);
 }
 
-.social-card .reminder {
+.contact-main {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.75rem;
-    color: var(--primary);
-    margin-top: 8px;
-    font-weight: 600;
+    gap: var(--space-md);
 }
 
-.health-metrics-form {
-    margin-top: var(--space-md);
-    padding-top: var(--space-md);
-    border-top: 1px dashed var(--border);
+.contact-avatar {
+    width: 44px;
+    height: 44px;
+    background-color: var(--secondary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.contact-info {
+    flex: 1;
+}
+
+.contact-info h3 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.contact-info p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
 }

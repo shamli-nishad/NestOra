@@ -1,106 +1,65 @@
 .layout {
     display: flex;
-    height: 100vh;
-    overflow: hidden;
+    justify-content: center;
+    background-color: #f8fafc;
+    /* Lighter background for desktop */
+    min-height: 100vh;
+}
+
+.sidebar {
+    display: none;
 }
 
 .main-content {
-    flex: 1;
+    width: 100%;
+    max-width: 480px;
+    background-color: var(--bg-main);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-}
-
-.header {
-    height: 64px;
-    background-color: var(--bg-card);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 var(--space-xl);
-    flex-shrink: 0;
-}
-
-.header-search {
-    display: flex;
-    align-items: center;
-    background-color: var(--bg-main);
-    border: 1px solid var(--border);
-    padding: 0 var(--space-md);
-    border-radius: var(--radius-md);
-    width: 300px;
-}
-
-.header-search input {
-    border: none;
-    background: none;
-    padding: var(--space-sm) 0;
-    margin-left: var(--space-sm);
-    color: var(--text-main);
-    width: 100%;
-}
-
-.header-user {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-}
-
-.notifications {
+    height: 100vh;
     position: relative;
-    cursor: pointer;
-    color: var(--text-muted);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.05);
 }
 
-.badge {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 8px;
-    height: 8px;
-    background-color: var(--danger);
-    border-radius: 50%;
-    border: 2px solid var(--bg-card);
+.app-header {
+    padding: 24px 24px 12px;
+    background-color: var(--bg-main);
 }
 
-.avatar {
-    width: 36px;
-    height: 36px;
-    background-color: var(--primary);
-    color: white;
-    border-radius: 50%;
+.header-top-row {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
+}
+
+.app-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f172a;
+    /* Dark navy from image */
+    letter-spacing: -0.8px;
+    margin: 0;
+    font-family: 'Inter', -apple-system, sans-serif;
+}
+
+.app-date {
+    font-size: 0.85rem;
     font-weight: 600;
+    color: #64748b;
+    /* Muted blue-grey from image */
+    letter-spacing: 0.5px;
+    font-family: 'Inter', -apple-system, sans-serif;
 }
 
 .content-area {
     flex: 1;
     overflow-y: auto;
-    padding: var(--space-xl);
+    padding: 0 24px 100px;
 }
 
-@media (max-width: 768px) {
-    .sidebar {
-        display: none;
-    }
-
+@media (max-width: 480px) {
     .main-content {
-        padding-bottom: 70px;
-        /* Space for bottom nav */
-    }
-
-    .header {
-        padding: 0 var(--space-md);
-    }
-
-    .header-search {
-        width: 150px;
-    }
-
-    .content-area {
-        padding: var(--space-md);
+        max-width: 100%;
+        box-shadow: none;
     }
 }

@@ -1,149 +1,191 @@
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: var(--space-lg);
+.dashboard-page {
+    padding-bottom: 100px;
+}
+
+.dashboard-section {
     margin-bottom: var(--space-xl);
 }
 
-.stat-card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-lg);
-    display: flex;
-    align-items: center;
-    gap: var(--space-lg);
-    box-shadow: var(--shadow-sm);
+.dashboard-section h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: var(--space-lg);
 }
 
-.stat-icon {
-    width: 48px;
-    height: 48px;
+/* Summary Grid */
+.summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+}
+
+.summary-card {
+    display: flex;
+    align-items: center;
+    padding: var(--space-lg);
+    gap: var(--space-md);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.summary-card:active {
+    transform: scale(0.98);
+}
+
+.icon-box {
+    width: 40px;
+    height: 40px;
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
+    color: white;
 }
 
-.stat-icon.chores {
-    background-color: #e0e7ff;
-    color: #4338ca;
+.icon-box.chores {
+    background-color: #6366f1;
 }
 
-.stat-icon.bills {
-    background-color: #fee2e2;
-    color: #dc2626;
+.icon-box.bills {
+    background-color: #ef4444;
 }
 
-.stat-icon.inventory {
-    background-color: #fef3c7;
-    color: #d97706;
+.icon-box.inventory {
+    background-color: #f59e0b;
 }
 
-.stat-icon.expenses {
-    background-color: #d1fae5;
-    color: #059669;
+.icon-box.spend {
+    background-color: #10b981;
 }
 
-.stat-info span {
-    display: block;
-    font-size: 0.875rem;
+.summary-card .info {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-card .label {
+    font-size: 0.75rem;
+    font-weight: 600;
     color: var(--text-muted);
-    margin-bottom: 2px;
 }
 
-.stat-info strong {
-    font-size: 1.5rem;
-    font-weight: 700;
+.summary-card .value {
+    font-size: 1.25rem;
+    font-weight: 800;
     color: var(--text-main);
 }
 
-.dashboard-content {
+/* Actions Grid */
+.actions-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: var(--space-xl);
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-lg);
-}
-
-.btn-text {
-    background: none;
-    color: var(--primary);
-    font-weight: 600;
-    font-size: 0.875rem;
-}
-
-.expense-list {
-    display: flex;
-    flex-direction: column;
+    grid-template-columns: repeat(4, 1fr);
     gap: var(--space-md);
 }
 
-.expense-item {
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: var(--space-md) 4px;
+    background-color: white;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+    background-color: #f8fafc;
+}
+
+.action-btn span {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-main);
+    text-align: center;
+}
+
+.action-btn svg {
+    color: var(--primary);
+}
+
+/* Activity Timeline */
+.activity-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    position: relative;
+    padding-left: 16px;
+}
+
+.activity-timeline::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--border-light);
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    position: relative;
+}
+
+.activity-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--border);
+    border: 2px solid var(--bg-main);
+    position: absolute;
+    left: -16px;
+    z-index: 1;
+}
+
+.activity-dot.chore {
+    background-color: #6366f1;
+}
+
+.activity-dot.meal {
+    background-color: #f59e0b;
+}
+
+.activity-dot.expense {
+    background-color: #10b981;
+}
+
+.activity-dot.bill {
+    background-color: #ef4444;
+}
+
+.activity-content {
+    flex: 1;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--space-sm) 0;
-    border-bottom: 1px solid #f1f5f9;
+    padding: var(--space-md) var(--space-lg);
 }
 
-.exp-info {
-    display: flex;
-    flex-direction: column;
+.activity-info h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 2px;
 }
 
-.exp-info span {
+.activity-meta {
     font-size: 0.75rem;
     color: var(--text-muted);
 }
 
-.exp-amount {
-    font-weight: 700;
-}
-
-.exp-amount.shopping {
-    color: var(--secondary);
-}
-
-.exp-amount.bill {
-    color: var(--primary);
-}
-
-.exp-amount.manual {
-    color: var(--text-main);
-}
-
-.actions-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-md);
-    margin-top: var(--space-md);
-}
-
-.action-btn {
-    padding: var(--space-md);
-    background-color: #f8fafc;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    font-weight: 500;
-    font-size: 0.875rem;
-    text-align: center;
-    transition: var(--transition);
-}
-
-.action-btn:hover {
-    background-color: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-
-@media (max-width: 1024px) {
-    .dashboard-content {
-        grid-template-columns: 1fr;
-    }
+.activity-amount {
+    font-weight: 800;
+    color: #dc2626;
+    font-size: 0.9rem;
 }

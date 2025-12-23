@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, Heart, Users, Clock, MapPin, Bell, CheckCircle } from 'lucide-react';
+import { Plus, Calendar, Clock, User, Heart, MessageSquare, ChevronRight, Trash2 } from 'lucide-react';
 import './Schedule.css';
 
 const Schedule = () => {
-    const [activeTab, setActiveTab] = useState('planner'); // planner, health, social
+    const [activeTab, setActiveTab] = useState('planner'); // planner, contacts
     const [events, setEvents] = useState(() => {
         const saved = localStorage.getItem('nestora_events');
         return saved ? JSON.parse(saved) : [];
@@ -13,7 +13,7 @@ const Schedule = () => {
         return saved ? JSON.parse(saved) : [];
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [currentEvent, setCurrentEvent] = useState(null);
+    const [modalType, setModalType] = useState('event'); // event, contact
 
     useEffect(() => {
         localStorage.setItem('nestora_events', JSON.stringify(events));
@@ -27,27 +27,18 @@ const Schedule = () => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const newEvent = {
-            id: currentEvent ? currentEvent.id : crypto.randomUUID(),
+            id: crypto.randomUUID(),
             title: formData.get('title'),
-            startTime: formData.get('startTime'),
+            time: formData.get('time'),
             type: formData.get('type'),
-            location: formData.get('location'),
-            notes: formData.get('notes'),
-            healthMetrics: activeTab === 'health' ? {
+            metrics: formData.get('type') === 'health' ? {
                 weight: formData.get('weight'),
-                bloodPressure: formData.get('bp'),
-                notes: formData.get('healthNotes')
+                bp: formData.get('bp')
             } : null,
-            createdAt: currentEvent ? currentEvent.createdAt : new Date().toISOString(),
+            createdAt: new Date().toISOString(),
         };
-
-        if (currentEvent) {
-            setEvents(events.map(ev => ev.id === currentEvent.id ? newEvent : ev));
-        } else {
-            setEvents([...events, newEvent]);
-        }
+        setEvents([...events, newEvent]);
         setIsModalOpen(false);
-        setCurrentEvent(null);
     };
 
     const handleAddContact = (e) => {
@@ -56,12 +47,9 @@ const Schedule = () => {
         const newContact = {
             id: crypto.randomUUID(),
             name: formData.get('name'),
-            lastContacted: new Date().toISOString(),
-            followUpReminder: {
-                enabled: true,
-                frequencyDays: parseInt(formData.get('freq')),
-                nextReminder: new Date(Date.now() + parseInt(formData.get('freq')) * 86400000).toISOString().split('T')[0]
-            }
+            lastContact: formData.get('lastContact'),
+            frequency: formData.get('frequency'),
+            notes: formData.get('notes'),
         };
         setContacts([...contacts, newContact]);
         setIsModalOpen(false);
@@ -69,157 +57,121 @@ const Schedule = () => {
 
     return (
         <div className="page schedule-page">
-            <div className="page-header">
-                <div>
-                    <h1>Schedule & Time Management</h1>
-                    <p>Plan your day and stay connected</p>
-                </div>
-                <div className="header-actions">
-                    <div className="tabs">
-                        <button className={`tab ${activeTab === 'planner' ? 'active' : ''}`} onClick={() => setActiveTab('planner')}>Planner</button>
-                        <button className={`tab ${activeTab === 'health' ? 'active' : ''}`} onClick={() => setActiveTab('health')}>Health</button>
-                        <button className={`tab ${activeTab === 'social' ? 'active' : ''}`} onClick={() => setActiveTab('social')}>Social</button>
-                    </div>
-                    <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-                        <Plus size={20} />
-                        <span>{activeTab === 'social' ? 'Add Contact' : 'Add Event'}</span>
-                    </button>
-                </div>
+
+            <div className="segmented-control">
+                <button className={`segment ${activeTab === 'planner' ? 'active' : ''}`} onClick={() => setActiveTab('planner')}>Planner</button>
+                <button className={`segment ${activeTab === 'contacts' ? 'active' : ''}`} onClick={() => setActiveTab('contacts')}>Social</button>
             </div>
 
             {activeTab === 'planner' && (
                 <div className="planner-view">
-                    {events.filter(e => e.type !== 'health').length === 0 ? (
-                        <div className="empty-state"><Calendar size={48} /><p>No events scheduled for today.</p></div>
-                    ) : (
-                        <div className="timeline">
-                            {events.filter(e => e.type !== 'health').sort((a, b) => a.startTime.localeCompare(b.startTime)).map(ev => (
-                                <div key={ev.id} className="timeline-item">
-                                    <div className="time">{new Date(ev.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                                    <div className="event-card">
-                                        <h3>{ev.title}</h3>
-                                        <div className="meta">
-                                            {ev.location && <span><MapPin size={14} /> {ev.location}</span>}
-                                            <span className="type-tag">{ev.type}</span>
+                    <div className="timeline">
+                        {events.length === 0 ? (
+                            <div className="empty-state"><Calendar size={48} color="#cbd5e1" /><p>No events today.</p></div>
+                        ) : (
+                            events.sort((a, b) => a.time.localeCompare(b.time)).map(event => (
+                                <div key={event.id} className="timeline-item">
+                                    <div className="time-col">
+                                        <span className="time">{event.time}</span>
+                                    </div>
+                                    <div className={`event-card card ${event.type}`}>
+                                        <div className="event-info">
+                                            <h3>{event.title}</h3>
+                                            <span className="type-tag">{event.type}</span>
+                                            {event.metrics && (
+                                                <div className="health-metrics">
+                                                    <span>{event.metrics.weight}kg</span>
+                                                    <span>{event.metrics.bp} BP</span>
+                                                </div>
+                                            )}
                                         </div>
+                                        <button className="btn-icon" onClick={() => setEvents(events.filter(e => e.id !== event.id))}>
+                                            <Trash2 size={16} color="#94a3b8" />
+                                        </button>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {activeTab === 'health' && (
-                <div className="health-view">
-                    <div className="grid">
-                        {events.filter(e => e.type === 'health').map(ev => (
-                            <div key={ev.id} className="card health-card">
-                                <div className="card-header">
-                                    <h3>{ev.title}</h3>
-                                    <span>{new Date(ev.startTime).toLocaleDateString()}</span>
-                                </div>
-                                <div className="metrics">
-                                    <div className="metric"><span>Weight</span><strong>{ev.healthMetrics?.weight || '-'}</strong></div>
-                                    <div className="metric"><span>BP</span><strong>{ev.healthMetrics?.bloodPressure || '-'}</strong></div>
-                                </div>
-                                <p className="notes">{ev.healthMetrics?.notes}</p>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
+                    <button className="fab-add" onClick={() => { setModalType('event'); setIsModalOpen(true); }}>
+                        <Plus size={24} color="white" />
+                    </button>
                 </div>
             )}
 
-            {activeTab === 'social' && (
-                <div className="social-view">
-                    <div className="grid">
-                        {contacts.map(contact => (
-                            <div key={contact.id} className="card social-card">
-                                <div className="card-info">
+            {activeTab === 'contacts' && (
+                <div className="contacts-list">
+                    {contacts.map(contact => (
+                        <div key={contact.id} className="contact-card card">
+                            <div className="contact-main">
+                                <div className="contact-avatar">
+                                    <User size={20} color="white" />
+                                </div>
+                                <div className="contact-info">
                                     <h3>{contact.name}</h3>
-                                    <p>Last contacted: {new Date(contact.lastContacted).toLocaleDateString()}</p>
-                                    <div className="reminder">
-                                        <Bell size={14} />
-                                        <span>Next follow-up: {contact.followUpReminder.nextReminder}</span>
-                                    </div>
+                                    <p>Last contact: {new Date(contact.lastContact).toLocaleDateString()}</p>
                                 </div>
-                                <button className="btn btn-icon btn-success" onClick={() => {
-                                    setContacts(contacts.map(c => c.id === contact.id ? { ...c, lastContacted: new Date().toISOString(), followUpReminder: { ...c.followUpReminder, nextReminder: new Date(Date.now() + c.followUpReminder.frequencyDays * 86400000).toISOString().split('T')[0] } } : c));
-                                }}>
-                                    <CheckCircle size={20} />
-                                </button>
+                                <div className="contact-status">
+                                    <MessageSquare size={18} color="#2563eb" />
+                                </div>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    ))}
+                    <button className="fab-add" onClick={() => { setModalType('contact'); setIsModalOpen(true); }}>
+                        <Plus size={24} color="white" />
+                    </button>
                 </div>
             )}
 
             {isModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <h2>{activeTab === 'social' ? 'Add Contact' : 'Add Event'}</h2>
-                        <form onSubmit={activeTab === 'social' ? handleAddContact : handleAddEvent}>
-                            {activeTab === 'social' ? (
-                                <>
+                <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+                    <div className="bottom-sheet" onClick={e => e.stopPropagation()}>
+                        <div className="sheet-handle"></div>
+                        <h2>{modalType === 'event' ? 'Add Event' : 'Add Contact'}</h2>
+                        {modalType === 'event' ? (
+                            <form onSubmit={handleAddEvent}>
+                                <div className="form-group">
+                                    <label>Event Title</label>
+                                    <input name="title" required placeholder="e.g. Doctor Appointment" autoFocus />
+                                </div>
+                                <div className="form-row">
                                     <div className="form-group">
-                                        <label>Name</label>
-                                        <input name="name" required placeholder="John Doe" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Follow-up Frequency (days)</label>
-                                        <input type="number" name="freq" defaultValue={30} required />
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="form-group">
-                                        <label>Title</label>
-                                        <input name="title" required placeholder="e.g. Dentist, Meeting" />
-                                    </div>
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label>Time</label>
-                                            <input type="datetime-local" name="startTime" required />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Type</label>
-                                            <select name="type" defaultValue={activeTab === 'health' ? 'health' : 'personal'}>
-                                                <option value="personal">Personal</option>
-                                                <option value="work">Work</option>
-                                                <option value="school">School</option>
-                                                <option value="health">Health</option>
-                                            </select>
-                                        </div>
+                                        <label>Time</label>
+                                        <input type="time" name="time" required />
                                     </div>
                                     <div className="form-group">
-                                        <label>Location</label>
-                                        <input name="location" placeholder="e.g. City Dental" />
+                                        <label>Type</label>
+                                        <select name="type">
+                                            <option value="appointment">Appointment</option>
+                                            <option value="health">Health Check</option>
+                                            <option value="social">Social</option>
+                                            <option value="other">Other</option>
+                                        </select>
                                     </div>
-                                    {activeTab === 'health' && (
-                                        <div className="health-metrics-form">
-                                            <div className="form-row">
-                                                <div className="form-group">
-                                                    <label>Weight</label>
-                                                    <input name="weight" placeholder="e.g. 70kg" />
-                                                </div>
-                                                <div className="form-group">
-                                                    <label>BP</label>
-                                                    <input name="bp" placeholder="e.g. 120/80" />
-                                                </div>
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Visit Notes</label>
-                                                <textarea name="healthNotes" rows="3"></textarea>
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                            <div className="modal-actions">
-                                <button type="button" className="btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">Save</button>
-                            </div>
-                        </form>
+                                </div>
+                                <div className="modal-actions">
+                                    <button type="submit" className="btn-primary full-width">Add Event</button>
+                                </div>
+                            </form>
+                        ) : (
+                            <form onSubmit={handleAddContact}>
+                                <div className="form-group">
+                                    <label>Name</label>
+                                    <input name="name" required placeholder="e.g. Mom" autoFocus />
+                                </div>
+                                <div className="form-group">
+                                    <label>Last Contact</label>
+                                    <input type="date" name="lastContact" required />
+                                </div>
+                                <div className="form-group">
+                                    <label>Frequency (days)</label>
+                                    <input type="number" name="frequency" defaultValue={7} />
+                                </div>
+                                <div className="modal-actions">
+                                    <button type="submit" className="btn-primary full-width">Add Contact</button>
+                                </div>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}

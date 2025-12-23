@@ -1,76 +1,90 @@
-.bills-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: var(--space-lg);
+.bills-page {
+    padding-bottom: 100px;
+}
+
+.bill-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
 }
 
 .bill-card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
     padding: var(--space-lg);
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
-    box-shadow: var(--shadow-sm);
-    transition: var(--transition);
-}
-
-.bill-card.overdue {
-    border-color: var(--danger);
-    background-color: #fff1f2;
-}
-
-.bill-card.paid {
-    opacity: 0.8;
-    background-color: #f8fafc;
 }
 
 .bill-main {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: var(--space-md);
+}
+
+.bill-icon {
+    width: 44px;
+    height: 44px;
+    background-color: var(--primary);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.bill-info {
+    flex: 1;
+}
+
+.bill-info h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
     margin-bottom: 4px;
 }
 
-.bill-amount {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--text-main);
-}
-
-.bill-meta {
+.bill-info .meta {
     display: flex;
-    justify-content: space-between;
+    gap: var(--space-md);
     align-items: center;
 }
 
 .due-date {
-    font-size: 0.875rem;
-    color: var(--text-muted);
     display: flex;
     align-items: center;
     gap: 4px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
 }
 
-.overdue .due-date {
-    color: var(--danger);
-    font-weight: 600;
+.category-tag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background-color: #f1f5f9;
+    color: #64748b;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+}
+
+.bill-amount .amount {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-main);
 }
 
 .bill-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid var(--border);
     padding-top: var(--space-md);
+    border-top: 1px solid var(--border-light);
 }
 
-.paid-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--success);
-    font-weight: 600;
-    font-size: 0.875rem;
+.bill-card.paid {
+    opacity: 0.7;
+}
+
+.bill-card.paid .bill-icon {
+    background-color: #10b981;
 }
