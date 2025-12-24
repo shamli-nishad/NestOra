@@ -16,7 +16,7 @@ const BottomNav = () => {
                 <Home size={20} />
                 <span>Home</span>
             </NavLink>
-            <NavLink to="/chores" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+            <NavLink to="/tasks" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
                 <CheckSquare size={20} />
                 <span>Tasks</span>
             </NavLink>

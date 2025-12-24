@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 
-import Chores from './modules/Chores/Chores';
+import TasksContainer from './modules/Tasks/TasksContainer';
 
 import Groceries from './modules/Groceries/Groceries';
 
@@ -18,7 +18,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/chores" element={<Chores />} />
+          <Route path="/tasks" element={<TasksContainer />} />
           <Route path="/meals" element={<Meals />} />
           <Route path="/groceries" element={<Groceries />} />
           <Route path="/settings" element={<Settings />} />

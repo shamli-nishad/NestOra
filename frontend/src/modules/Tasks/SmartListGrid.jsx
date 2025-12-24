@@ -32,3 +32,4 @@ const SmartListGrid = ({ activeView, onViewChange, counts }) => {
 };
 
 export default SmartListGrid;
+

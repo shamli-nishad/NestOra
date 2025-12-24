@@ -1,14 +1,14 @@
-.chores-page {
+.tasks-page {
     padding-bottom: 100px;
 }
 
-.chore-list {
+.task-list {
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
 }
 
-.chore-card {
+.task-card {
     display: flex;
     align-items: center;
     padding: var(--space-lg);
@@ -16,20 +16,20 @@
     transition: var(--transition);
 }
 
-.chore-card.completed {
+.task-card.completed {
     opacity: 0.6;
 }
 
-.chore-card.completed h3 {
+.task-card.completed h3 {
     text-decoration: line-through;
 }
 
-.chore-card.overdue {
+.task-card.overdue {
     border-left: 4px solid #dc2626;
     background-color: #fef2f2;
 }
 
-.chore-card.overdue .due-date {
+.task-card.overdue .due-date {
     color: #dc2626;
     font-weight: 700;
 }
@@ -38,7 +38,7 @@
     flex-shrink: 0;
 }
 
-.chore-info {
+.task-info {
     flex: 1;
 }
 
@@ -49,7 +49,7 @@
     margin-bottom: 4px;
 }
 
-.chore-info h3 {
+.task-info h3 {
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-main);
@@ -67,7 +67,7 @@
     border-radius: 12px;
 }
 
-.chore-info .meta {
+.task-info .meta {
     display: flex;
     gap: 8px;
     align-items: center;

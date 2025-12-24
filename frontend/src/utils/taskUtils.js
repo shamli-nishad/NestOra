@@ -1,5 +1,5 @@
 
-export const isChoreDue = (chore, targetDate = new Date()) => {
+export const isTaskDue = (task, targetDate = new Date()) => {
     // If completed, not pending (usually filtered out before calling this, but safe to ignore here if needed)
     // determining "due"ness is independent of completion status for the schedule calculation,
     // but the user requirement is for "pending chores" count.
@@ -13,12 +13,12 @@ export const isChoreDue = (chore, targetDate = new Date()) => {
 
     const isToday = date.getTime() === today.getTime();
 
-    switch (chore.frequency) {
+    switch (task.frequency) {
         case 'Daily':
             return true;
 
         case 'Weekly':
-            if (!chore.frequencyDays || chore.frequencyDays.length === 0) return false;
+            if (!task.frequencyDays || task.frequencyDays.length === 0) return false;
             // day 0 = Sunday, 1 = Monday...
             // User likely selects Mon, Tue... Map appropriately.
             // Let's assume frequencyDays stores full day names or indices. 
@@ -33,22 +33,22 @@ export const isChoreDue = (chore, targetDate = new Date()) => {
             // So we convert date.getDay() to string or check mapping
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             const todayName = days[todayDay];
-            return chore.frequencyDays.includes(todayName);
+            return task.frequencyDays.includes(todayName);
 
         case 'Monthly':
             // Checks if today is the Xth day of the month
-            if (!chore.frequencyDate) return false;
-            return date.getDate() === parseInt(chore.frequencyDate);
+            if (!task.frequencyDate) return false;
+            return date.getDate() === parseInt(task.frequencyDate);
 
         case 'One-time':
             // Due on the specific date. 
             // ALSO due if it's overdue (i.e. due date was in the past) and it's not done?
             // The constraint says "due today (or overdue one-time tasks)".
             // So if today >= dueDate
-            if (!chore.dueDate) return false;
+            if (!task.dueDate) return false;
             // Parse YYYY-MM-DD manually to ensure local midnight time
             // otherwise new Date('2025-12-25') is UTC, which might be Dec 24th local.
-            const [y, m, d] = chore.dueDate.split('-').map(Number);
+            const [y, m, d] = task.dueDate.split('-').map(Number);
             const due = new Date(y, m - 1, d);
             due.setHours(0, 0, 0, 0);
             return date >= due;
@@ -58,41 +58,41 @@ export const isChoreDue = (chore, targetDate = new Date()) => {
     }
 };
 
-export const isChoreOverdue = (chore) => {
+export const isTaskOverdue = (task) => {
     // Only one-time tasks can be overdue
-    if (chore.frequency !== 'One-time' || !chore.dueDate || chore.completed) {
+    if (task.frequency !== 'One-time' || !task.dueDate || task.completed) {
         return false;
     }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [y, m, d] = chore.dueDate.split('-').map(Number);
+    const [y, m, d] = task.dueDate.split('-').map(Number);
     const due = new Date(y, m - 1, d);
     due.setHours(0, 0, 0, 0);
 
     return due < today;
 };
 
-export const getNextDueDate = (chore) => {
+export const getNextDueDate = (task) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const nextDate = new Date(today);
 
-    switch (chore.frequency) {
+    switch (task.frequency) {
         case 'Daily':
             nextDate.setDate(today.getDate() + 1);
             return nextDate.toISOString().split('T')[0];
 
         case 'Weekly':
-            if (!chore.frequencyDays || chore.frequencyDays.length === 0) return null;
+            if (!task.frequencyDays || task.frequencyDays.length === 0) return null;
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             const todayIndex = today.getDay();
 
             // Find next day in the list
             // Create array of indices from chore days
-            const targetIndices = chore.frequencyDays.map(d => days.indexOf(d)).sort((a, b) => a - b);
+            const targetIndices = task.frequencyDays.map(d => days.indexOf(d)).sort((a, b) => a - b);
 
             // Find first index > todayIndex
             let nextIndex = targetIndices.find(i => i > todayIndex);
@@ -110,8 +110,8 @@ export const getNextDueDate = (chore) => {
             return nextDate.toISOString().split('T')[0];
 
         case 'Monthly':
-            if (!chore.frequencyDate) return null;
-            const targetDate = parseInt(chore.frequencyDate);
+            if (!task.frequencyDate) return null;
+            const targetDate = parseInt(task.frequencyDate);
             const currentDay = today.getDate();
 
             // If target date is in future this month, usually it would just be "Upcoming" pending task.

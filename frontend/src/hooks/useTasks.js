@@ -2,29 +2,29 @@ import { useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { useRetentionPolicy } from './useRetentionPolicy';
 
-export const useChores = () => {
-    const [chores, setChores] = useLocalStorage('nestora_chores', []);
+export const useTasks = () => {
+    const [tasks, setTasks] = useLocalStorage('nestora_chores', []); // Keep key for backward compatibility
     const { applyRetention } = useRetentionPolicy();
 
     // Auto-Cleanup & Recurrence Reset Effect
     useEffect(() => {
-        let updatedChores = [...chores];
+        let updatedTasks = [...tasks];
         let hasChanges = false;
 
         // 1. Recurrence Reset: Reset recurring tasks if completed before today
         const now = new Date();
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-        updatedChores = updatedChores.map(chore => {
-            if (chore.completed && chore.frequency !== 'One-time' && chore.completedAt) {
-                const completionDate = new Date(chore.completedAt);
+        updatedTasks = updatedTasks.map(task => {
+            if (task.completed && task.frequency !== 'One-time' && task.completedAt) {
+                const completionDate = new Date(task.completedAt);
                 // If completed strictly before start of today
                 if (completionDate < startOfToday) {
                     hasChanges = true;
-                    return { ...chore, completed: false, completedAt: null };
+                    return { ...task, completed: false, completedAt: null };
                 }
             }
-            return chore;
+            return task;
         });
 
         // 2. Clean up Completed Tasks (Retention) - Only checks if item.completed is true
@@ -39,52 +39,52 @@ export const useChores = () => {
         // Logic seems sound: reset first, then cleanup what remains completed (which should differ from recurring ones that just reset).
 
         if (hasChanges) {
-            console.log("[useChores] Resetting recurring tasks.");
-            setChores(updatedChores);
+            console.log("[useTasks] Resetting recurring tasks.");
+            setTasks(updatedTasks);
         } else {
             // Only run retention if no heavy reset changes happened to avoid conflict/race in one render cycle
             // largely minimal risk with useLocalStorage but good practice.
-            if (chores.length > 0) {
-                const cleanedChores = applyRetention(chores, 'completedAt', (item) => item.completed);
-                if (cleanedChores.length !== chores.length) {
-                    console.log(`[useChores] Cleaning up ${chores.length - cleanedChores.length} old tasks.`);
-                    setChores(cleanedChores);
+            if (tasks.length > 0) {
+                const cleanedTasks = applyRetention(tasks, 'completedAt', (item) => item.completed);
+                if (cleanedTasks.length !== tasks.length) {
+                    console.log(`[useTasks] Cleaning up ${tasks.length - cleanedTasks.length} old tasks.`);
+                    setTasks(cleanedTasks);
                 }
             }
         }
-    }, [chores]); // Run on mount and when chores change (to catch updates from other tabs if synced)
+    }, [tasks]); // Run on mount and when tasks change
 
-    const addChore = (choreData) => {
-        setChores([...chores, choreData]);
+    const addTask = (taskData) => {
+        setTasks([...tasks, taskData]);
     };
 
-    const toggleChore = (id) => {
-        setChores(chores.map(c => {
-            if (c.id === id) {
-                const newCompleted = !c.completed;
+    const toggleTask = (id) => {
+        setTasks(tasks.map(t => {
+            if (t.id === id) {
+                const newCompleted = !t.completed;
                 return {
-                    ...c,
+                    ...t,
                     completed: newCompleted,
                     completedAt: newCompleted ? new Date().toISOString() : null
                 };
             }
-            return c;
+            return t;
         }));
     };
 
-    const deleteChore = (id) => {
-        setChores(chores.filter(c => c.id !== id));
+    const deleteTask = (id) => {
+        setTasks(tasks.filter(t => t.id !== id));
     };
 
-    const updateChore = (updatedChore) => {
-        setChores(chores.map(c => c.id === updatedChore.id ? updatedChore : c));
+    const updateTask = (updatedTask) => {
+        setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
     };
 
     return {
-        chores,
-        addChore,
-        toggleChore,
-        deleteChore,
-        updateChore
+        tasks,
+        addTask,
+        toggleTask,
+        deleteTask,
+        updateTask
     };
 };

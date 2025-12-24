@@ -1,61 +1,61 @@
 import React, { useEffect } from 'react';
 import { Plus, CheckCircle, Circle, Trash2, Clock, AlertCircle, Edit2 } from 'lucide-react';
-import { CHORE_FREQUENCIES, CHORE_PRIORITIES, TASK_SUBCATEGORIES } from '../../constants';
+import { TASK_FREQUENCIES, TASK_PRIORITIES, TASK_SUBCATEGORIES } from '../../constants';
 import { formatDate } from '../../utils/dateUtils';
-import { isChoreDue, getNextDueDate, isChoreOverdue } from '../../utils/choreUtils';
+import { isTaskDue, getNextDueDate, isTaskOverdue } from '../../utils/taskUtils';
 import BottomSheet from '../../components/UI/BottomSheet';
 import SegmentedControl from '../../components/UI/SegmentedControl';
 import FilterBar from '../../components/UI/FilterBar';
 import { useFilterSort } from '../../hooks/useFilterSort';
-import './Chores.css';
+import './Tasks.css';
 
-// Helper Component for rendering a single chore card
-const ChoreItem = ({ chore, onToggleChore, handleEditClick, onDeleteChore }) => (
-    <div className={`chore-card card ${chore.completed ? 'completed' : ''} ${chore.isProjection ? 'projection' : ''} ${isChoreOverdue(chore) ? 'overdue' : ''}`}>
+// Helper Component for rendering a single task card
+const TaskItem = ({ task, onToggleTask, handleEditClick, onDeleteTask }) => (
+    <div className={`task-card card ${task.completed ? 'completed' : ''} ${task.isProjection ? 'projection' : ''} ${isTaskOverdue(task) ? 'overdue' : ''}`}>
         <button
             className="check-btn"
-            onClick={() => onToggleChore(chore.id)}
-            disabled={chore.isProjection}
-            style={chore.isProjection ? { cursor: 'default', opacity: 0.5 } : {}}
+            onClick={() => onToggleTask(task.id)}
+            disabled={task.isProjection}
+            style={task.isProjection ? { cursor: 'default', opacity: 0.5 } : {}}
         >
-            {chore.completed ? <CheckCircle size={24} color="#10b981" /> : <Circle size={24} color={chore.isProjection ? "#e2e8f0" : "#cbd5e1"} />}
+            {task.completed ? <CheckCircle size={24} color="#10b981" /> : <Circle size={24} color={task.isProjection ? "#e2e8f0" : "#cbd5e1"} />}
         </button>
-        <div className="chore-info">
+        <div className="task-info">
             <div className="title-row">
-                <h3>{chore.title}</h3>
-                {chore.estimatedTime && (
+                <h3>{task.title}</h3>
+                {task.estimatedTime && (
                     <span className="time-badge">
-                        <Clock size={12} /> {chore.estimatedTime}m
+                        <Clock size={12} /> {task.estimatedTime}m
                     </span>
                 )}
             </div>
             <div className="meta">
-                <span className="category-tag">{chore.category}</span>
-                {chore.subCategory && <span className="subcategory-tag">{chore.subCategory}</span>}
-                <span className="frequency-tag">{chore.frequency}</span>
-                <span className={`priority-tag ${chore.priority}`}>
-                    {chore.priority}
+                <span className="category-tag">{task.category}</span>
+                {task.subCategory && <span className="subcategory-tag">{task.subCategory}</span>}
+                <span className="frequency-tag">{task.frequency}</span>
+                <span className={`priority-tag ${task.priority}`}>
+                    {task.priority}
                 </span>
-                {chore.dueDate && (
+                {task.dueDate && (
                     <span className="due-date">
-                        {formatDate(chore.dueDate)}
+                        {formatDate(task.dueDate)}
                     </span>
                 )}
             </div>
-            {chore.frequency === 'Weekly' && chore.frequencyDays && (
+            {task.frequency === 'Weekly' && task.frequencyDays && (
                 <div className="freq-details">
-                    {chore.frequencyDays.join(', ')}
+                    {task.frequencyDays.join(', ')}
                 </div>
             )}
         </div>
         <div className="card-actions">
-            {!chore.completed && !chore.isProjection && (
-                <button className="btn-icon edit-btn" onClick={() => handleEditClick(chore)}>
+            {!task.completed && !task.isProjection && (
+                <button className="btn-icon edit-btn" onClick={() => handleEditClick(task)}>
                     <Edit2 size={18} color="#94a3b8" />
                 </button>
             )}
-            {!chore.isProjection && (
-                <button className="delete-btn" onClick={() => onDeleteChore(chore.id)}>
+            {!task.isProjection && (
+                <button className="delete-btn" onClick={() => onDeleteTask(task.id)}>
                     <Trash2 size={18} color="#94a3b8" />
                 </button>
             )}
@@ -63,23 +63,23 @@ const ChoreItem = ({ chore, onToggleChore, handleEditClick, onDeleteChore }) => 
     </div>
 );
 
-const ChoresList = ({
-    chores,
+const TasksList = ({
+    tasks,
     activeTab,
     setActiveTab,
     isModalOpen,
     setIsModalOpen,
-    onAddChore,
-    onToggleChore,
-    onDeleteChore,
-    onUpdateChore,
+    onAddTask,
+    onToggleTask,
+    onDeleteTask,
+    onUpdateTask,
     onCancel
 }) => {
-    const [editingChore, setEditingChore] = React.useState(null);
+    const [editingTask, seteditingTask] = React.useState(null);
     // 1. First derive the list based on the active tab (Pending/Completed)
-    const tabFilteredChores = React.useMemo(() => {
-        return chores.filter(c => activeTab === 'pending' ? !c.completed : c.completed);
-    }, [chores, activeTab]);
+    const tabFilteredTasks = React.useMemo(() => {
+        return tasks.filter(c => activeTab === 'pending' ? !c.completed : c.completed);
+    }, [tasks, activeTab]);
 
     // 2. Define Filter and Sort Options
     const categories = Object.keys(TASK_SUBCATEGORIES);
@@ -96,32 +96,32 @@ const ChoresList = ({
 
     // 3. Use Custom Hook
     const {
-        processedData: filteredChores,
+        processedData: filteredTasks,
         filters,
         setFilter,
         sortConfig,
         setSortConfig
-    } = useFilterSort(tabFilteredChores, {
+    } = useFilterSort(tabFilteredTasks, {
         initialSort: activeTab === 'completed'
             ? { key: 'completedAt', direction: 'desc' }
             : { key: 'dueDate', direction: 'asc' },
         sortFunctions
     });
 
-    const [selectedFrequency, setSelectedFrequency] = React.useState(CHORE_FREQUENCIES[0]);
+    const [selectedFrequency, setSelectedFrequency] = React.useState(TASK_FREQUENCIES[0]);
     const [selectedCategory, setSelectedCategory] = React.useState(categories[0]);
 
     useEffect(() => {
-        if (editingChore) {
-            setSelectedCategory(editingChore.category);
-            setSelectedFrequency(editingChore.frequency);
+        if (editingTask) {
+            setSelectedCategory(editingTask.category);
+            setSelectedFrequency(editingTask.frequency);
         } else {
             // Reset to defaults if not editing (optional, or rely on form reset)
             // But we keep user's last selection or default? Let's reset for fresh add
             // setSelectedCategory(categories[0]); 
-            // setSelectedFrequency(CHORE_FREQUENCIES[0]);
+            // setSelectedFrequency(TASK_FREQUENCIES[0]);
         }
-    }, [editingChore]);
+    }, [editingTask]);
 
     // Update sort configuration when switching tabs
     useEffect(() => {
@@ -145,7 +145,7 @@ const ChoresList = ({
             frequencyDays.push(checkbox.value);
         });
 
-        const choreData = {
+        const taskData = {
             title: formData.get('title'),
             category: formData.get('category'),
             subCategory: formData.get('subCategory'),
@@ -156,32 +156,32 @@ const ChoresList = ({
             priority: formData.get('priority'),
             dueDate: formData.get('dueDate'),
             // Preserve existing fields if editing, else defaults
-            id: editingChore ? editingChore.id : undefined,
-            completed: editingChore ? editingChore.completed : false,
-            createdAt: editingChore ? editingChore.createdAt : undefined,
-            completedAt: editingChore ? editingChore.completedAt : undefined
+            id: editingTask ? editingTask.id : undefined,
+            completed: editingTask ? editingTask.completed : false,
+            createdAt: editingTask ? editingTask.createdAt : undefined,
+            completedAt: editingTask ? editingTask.completedAt : undefined
         };
 
-        if (editingChore) {
-            onUpdateChore(choreData);
-            setEditingChore(null);
+        if (editingTask) {
+            onUpdateTask(taskData);
+            seteditingTask(null);
         } else {
-            // onAddChore expects event, we need to adapt it or change onAddChore
-            // Wait, ChoresContainer handleAddChore reads from e.target.
+            // onAddTask expects event, we need to adapt it or change onAddTask
+            // Wait, TasksContainer handleaddTask reads from e.target.
             // We should probably lift the form extraction logic to Container or adapt here.
-            // Easier: just pass the event to onAddChore as before if not editing.
+            // Easier: just pass the event to onAddTask as before if not editing.
             // BUT, if we want to reuse the form logic...
-            // Let's change ChoresContainer to accept data object? 
+            // Let's change TasksContainer to accept data object? 
             // Refactoring container is cleaner but let's stick to minimal changes:
-            // We can just call onAddChore(e) if not editing.
-            onAddChore(e);
+            // We can just call onAddTask(e) if not editing.
+            onAddTask(e);
         }
     };
 
-    // We need to intercept the submit to handle update manually OR let onAddChore handle it.
-    // Since onAddChore is tied to 'e.target', let's use a wrapper.
+    // We need to intercept the submit to handle update manually OR let onAddTask handle it.
+    // Since onAddTask is tied to 'e.target', let's use a wrapper.
     const handleSubmitWrapper = (e) => {
-        if (editingChore) {
+        if (editingTask) {
             e.preventDefault();
             // Extract data manually for update
             const formData = new FormData(e.target);
@@ -189,7 +189,7 @@ const ChoresList = ({
             e.target.querySelectorAll('input[name="frequencyDays"]:checked').forEach(cb => frequencyDays.push(cb.value));
 
             const updated = {
-                ...editingChore,
+                ...editingTask,
                 title: formData.get('title'),
                 category: formData.get('category'),
                 subCategory: formData.get('subCategory'),
@@ -200,29 +200,29 @@ const ChoresList = ({
                 dueDate: formData.get('dueDate'),
                 estimatedTime: formData.get('estimatedTime') // if added field
             };
-            onUpdateChore(updated);
-            setEditingChore(null);
+            onUpdateTask(updated);
+            seteditingTask(null);
         } else {
-            onAddChore(e);
+            onAddTask(e);
         }
     };
 
-    const handleEditClick = (chore) => {
-        setEditingChore(chore);
+    const handleEditClick = (task) => {
+        seteditingTask(task);
         setIsModalOpen(true);
     };
 
     const handleCloseModal = () => {
-        setEditingChore(null);
+        seteditingTask(null);
         onCancel();
     };
 
     return (
-        <div className="page chores-page">
+        <div className="page tasks-page">
             <SegmentedControl
                 options={[
-                    { value: 'pending', label: `Pending (${chores.filter(c => !c.completed).length})` },
-                    { value: 'completed', label: `Completed (${chores.filter(c => c.completed).length})` }
+                    { value: 'pending', label: `Pending (${tasks.filter(c => !c.completed).length})` },
+                    { value: 'completed', label: `Completed (${tasks.filter(c => c.completed).length})` }
                 ]}
                 value={activeTab}
                 onChange={setActiveTab}
@@ -231,7 +231,7 @@ const ChoresList = ({
             <FilterBar
                 filterOptions={[
                     { key: 'category', label: 'Category', options: categories },
-                    { key: 'priority', label: 'Priority', options: CHORE_PRIORITIES.map(p => p.value) }
+                    { key: 'priority', label: 'Priority', options: TASK_PRIORITIES.map(p => p.value) }
                 ]}
                 sortOptions={[
                     { value: 'dueDate', label: 'Date' },
@@ -244,12 +244,12 @@ const ChoresList = ({
                 onSortChange={setSortConfig}
             />
 
-            <button className="btn-primary full-width add-btn-main" onClick={() => { setEditingChore(null); setIsModalOpen(true); }}>
+            <button className="btn-primary full-width add-btn-main" onClick={() => { seteditingTask(null); setIsModalOpen(true); }}>
                 <Plus size={20} /> Add New Task
             </button>
 
-            <div className="chore-list">
-                {filteredChores.length === 0 ? (
+            <div className="task-list">
+                {filteredTasks.length === 0 ? (
                     <div className="empty-state">
                         <CheckCircle size={48} color="#cbd5e1" />
                         <p>No tasks match your filters.</p>
@@ -258,16 +258,16 @@ const ChoresList = ({
                     activeTab === 'pending' ? (
                         <>
                             {/* Section: Tasks for Today */}
-                            {filteredChores.filter(c => isChoreDue(c)).length > 0 && (
+                            {filteredTasks.filter(c => isTaskDue(c)).length > 0 && (
                                 <div className="list-section">
                                     <h3 className="section-header">Tasks for Today</h3>
-                                    {filteredChores.filter(c => isChoreDue(c)).map(chore => (
-                                        <ChoreItem
-                                            key={chore.id}
-                                            chore={chore}
-                                            onToggleChore={onToggleChore}
+                                    {filteredTasks.filter(c => isTaskDue(c)).map(task => (
+                                        <TaskItem
+                                            key={task.id}
+                                            task={task}
+                                            onToggleTask={onToggleTask}
                                             handleEditClick={handleEditClick}
-                                            onDeleteChore={onDeleteChore}
+                                            onDeleteTask={onDeleteTask}
                                         />
                                     ))}
                                 </div>
@@ -277,13 +277,13 @@ const ChoresList = ({
                             {(() => {
                                 // 1. Determine Upcoming Tasks
                                 // A. Pending tasks NOT due today (from the already filtered list)
-                                const pendingFuture = filteredChores.filter(c => !c.completed && !isChoreDue(c));
+                                const pendingFutureTasks = filteredTasks.filter(c => !c.completed && !isTaskDue(c));
 
                                 // B. Completed Recurring tasks (Projected for next occurrence)
-                                // MUST source from 'chores' (all tasks) because 'filteredChores' only has pending ones due to activeTab context.
+                                // MUST source from 'tasks' (all tasks) because 'filteredTasks' only has pending ones due to activeTab context.
                                 // B. Completed Recurring tasks (Projected for next occurrence)
-                                // MUST source from 'chores' (all tasks) because 'filteredChores' only has pending ones due to activeTab context.
-                                const completedRecurring = chores.filter(c => {
+                                // MUST source from 'tasks' (all tasks) because 'filteredTasks' only has pending ones due to activeTab context.
+                                const completedRecurringTasks = tasks.filter(c => {
                                     if (!c.completed || c.frequency === 'One-time') return false;
 
                                     // Manually apply current active filters
@@ -297,7 +297,7 @@ const ChoresList = ({
                                     return matchesCategory && matchesPriority;
                                 });
 
-                                const projectedFuture = completedRecurring.map(c => ({
+                                const projectedFutureTasks = completedRecurringTasks.map(c => ({
                                     ...c,
                                     id: `${c.id}-future`, // Unique ID
                                     completed: false, // Visual state
@@ -305,23 +305,23 @@ const ChoresList = ({
                                     isProjection: true
                                 })).filter(c => c.dueDate);
 
-                                const allUpcoming = [...pendingFuture, ...projectedFuture];
+                                const allUpcomingTasks = [...pendingFutureTasks, ...projectedFutureTasks];
 
                                 // Sort by Date
-                                allUpcoming.sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
+                                allUpcomingTasks.sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
 
-                                if (allUpcoming.length === 0) return null;
+                                if (allUpcomingTasks.length === 0) return null;
 
                                 return (
                                     <div className="list-section">
                                         <h3 className="section-header">Upcoming</h3>
-                                        {allUpcoming.map(chore => (
-                                            <ChoreItem
-                                                key={chore.id}
-                                                chore={chore}
-                                                onToggleChore={chore.isProjection ? () => { } : onToggleChore}
-                                                handleEditClick={chore.isProjection ? () => { } : handleEditClick}
-                                                onDeleteChore={chore.isProjection ? () => { } : onDeleteChore}
+                                        {allUpcomingTasks.map(task => (
+                                            <TaskItem
+                                                key={task.id}
+                                                task={task}
+                                                onToggleTask={task.isProjection ? () => { } : onToggleTask}
+                                                handleEditClick={task.isProjection ? () => { } : handleEditClick}
+                                                onDeleteTask={task.isProjection ? () => { } : onDeleteTask}
                                             />
                                         ))}
                                     </div>
@@ -330,13 +330,13 @@ const ChoresList = ({
                         </>
                     ) : (
                         // Completed Tab - Flat List
-                        filteredChores.map(chore => (
-                            <ChoreItem
-                                key={chore.id}
-                                chore={chore}
-                                onToggleChore={onToggleChore}
+                        filteredTasks.map(task => (
+                            <TaskItem
+                                key={task.id}
+                                task={task}
+                                onToggleTask={onToggleTask}
                                 handleEditClick={handleEditClick}
-                                onDeleteChore={onDeleteChore}
+                                onDeleteTask={onDeleteTask}
                             />
                         ))
                     )
@@ -346,12 +346,12 @@ const ChoresList = ({
             <BottomSheet
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
-                title={editingChore ? "Edit Task" : "Add New Task"}
+                title={editingTask ? "Edit Task" : "Add New Task"}
             >
                 <form onSubmit={handleSubmitWrapper}>
                     <div className="form-group">
                         <label>Task Title</label>
-                        <input name="title" required placeholder="e.g. Wash Dishes" autoFocus defaultValue={editingChore?.title} />
+                        <input name="title" required placeholder="e.g. Wash Dishes" autoFocus defaultValue={editingTask?.title} />
                     </div>
                     <div className="form-row">
                         <div className="form-group">
@@ -368,7 +368,7 @@ const ChoresList = ({
                         </div>
                         <div className="form-group">
                             <label>Sub-Category</label>
-                            <select name="subCategory" defaultValue={editingChore?.subCategory}>
+                            <select name="subCategory" defaultValue={editingTask?.subCategory}>
                                 {/* Only show subcategories if available */}
                                 {subCategories.map(sub => (
                                     <option key={sub} value={sub}>{sub}</option>
@@ -379,8 +379,8 @@ const ChoresList = ({
                     </div>
                     <div className="form-group">
                         <label>Priority</label>
-                        <select name="priority" defaultValue={editingChore?.priority || 'medium'}>
-                            {CHORE_PRIORITIES.map(priority => (
+                        <select name="priority" defaultValue={editingTask?.priority || 'medium'}>
+                            {TASK_PRIORITIES.map(priority => (
                                 <option key={priority.value} value={priority.value}>{priority.label}</option>
                             ))}
                         </select>
@@ -392,7 +392,7 @@ const ChoresList = ({
                             value={selectedFrequency}
                             onChange={(e) => setSelectedFrequency(e.target.value)}
                         >
-                            {CHORE_FREQUENCIES.map(freq => (
+                            {TASK_FREQUENCIES.map(freq => (
                                 <option key={freq} value={freq}>{freq}</option>
                             ))}
                         </select>
@@ -408,7 +408,7 @@ const ChoresList = ({
                                             type="checkbox"
                                             name="frequencyDays"
                                             value={day}
-                                            defaultChecked={editingChore?.frequencyDays?.includes(day)}
+                                            defaultChecked={editingTask?.frequencyDays?.includes(day)}
                                         />
                                         <span>{day}</span>
                                     </label>
@@ -420,7 +420,7 @@ const ChoresList = ({
                     {selectedFrequency === 'Monthly' && (
                         <div className="form-group">
                             <label>Day of Month</label>
-                            <select name="frequencyDate" defaultValue={editingChore?.frequencyDate || "1"}>
+                            <select name="frequencyDate" defaultValue={editingTask?.frequencyDate || "1"}>
                                 {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
                                     <option key={d} value={d}>{d}</option>
                                 ))}
@@ -431,13 +431,13 @@ const ChoresList = ({
                     {selectedFrequency === 'One-time' && (
                         <div className="form-group">
                             <label>Date</label>
-                            <input type="date" name="dueDate" required defaultValue={editingChore?.dueDate} />
+                            <input type="date" name="dueDate" required defaultValue={editingTask?.dueDate} />
                         </div>
                     )}
 
                     <div className="modal-actions">
                         <button type="button" className="btn-secondary full-width" onClick={handleCloseModal}>Cancel</button>
-                        <button type="submit" className="btn-primary full-width">{editingChore ? "Update Task" : "Add Task"}</button>
+                        <button type="submit" className="btn-primary full-width">{editingTask ? "Update Task" : "Add Task"}</button>
                     </div>
                 </form>
             </BottomSheet>
@@ -445,4 +445,6 @@ const ChoresList = ({
     );
 };
 
-export default ChoresList;
+export default TasksList;
+
+

@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useChores } from '../../hooks/useChores';
-import ChoresList from './ChoresList';
+import { useTasks } from '../../hooks/useTasks';
+import TasksList from './TasksList';
 
-const ChoresContainer = () => {
+const TasksContainer = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('pending');
 
     // Use centralized hook
-    const { chores, addChore, toggleChore, deleteChore, updateChore } = useChores();
+    const { tasks, addTask, toggleTask, deleteTask, updateTask } = useTasks();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -21,7 +21,7 @@ const ChoresContainer = () => {
         }
     }, [location]);
 
-    const handleAddChoreWrapper = (e) => {
+    const handleaddTaskWrapper = (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
 
@@ -32,7 +32,7 @@ const ChoresContainer = () => {
             frequencyDays.push(checkbox.value);
         });
 
-        const newChore = {
+        const newTask = {
             id: crypto.randomUUID(),
             title: formData.get('title'),
             category: formData.get('category'),
@@ -46,12 +46,12 @@ const ChoresContainer = () => {
             completed: false,
             createdAt: new Date().toISOString(),
         };
-        addChore(newChore);
+        addTask(newTask);
         setIsModalOpen(false);
     };
 
-    const handleUpdateChoreWrapper = (updatedChore) => {
-        updateChore(updatedChore);
+    const handleupdateTaskWrapper = (updatedTask) => {
+        updateTask(updatedTask);
         setIsModalOpen(false);
     };
 
@@ -63,19 +63,21 @@ const ChoresContainer = () => {
     };
 
     return (
-        <ChoresList
-            chores={chores}
+        <TasksList
+            tasks={tasks}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             isModalOpen={isModalOpen}
             setIsModalOpen={setIsModalOpen}
-            onAddChore={handleAddChoreWrapper}
-            onToggleChore={toggleChore}
-            onDeleteChore={deleteChore}
-            onUpdateChore={handleUpdateChoreWrapper}
+            onAddTask={handleaddTaskWrapper}
+            onToggleTask={toggleTask}
+            onDeleteTask={deleteTask}
+            onUpdateTask={handleupdateTaskWrapper}
             onCancel={handleCancel}
         />
     );
 };
 
-export default ChoresContainer;
+export default TasksContainer;
+
+

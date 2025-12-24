@@ -16,7 +16,7 @@ import './Sidebar.css';
 const Sidebar = () => {
     const navItems = [
         { path: '/', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-        { path: '/chores', icon: <CheckSquare size={20} />, label: 'Chores' },
+        { path: '/tasks', icon: <CheckSquare size={20} />, label: 'Tasks' },
         { path: '/groceries', icon: <ShoppingBag size={20} />, label: 'Groceries' },
         { path: '/meals', icon: <Utensils size={20} />, label: 'Meals' },
         { path: '/bills', icon: <CreditCard size={20} />, label: 'Bills' },

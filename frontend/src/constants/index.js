@@ -7,14 +7,14 @@ export const TASK_SUBCATEGORIES = {
     'Other': ['General']
 };
 
-export const CHORE_FREQUENCIES = [
+export const TASK_FREQUENCIES = [
     'Daily',
     'Weekly',
     'Monthly',
     'One-time'
 ];
 
-export const CHORE_PRIORITIES = [
+export const TASK_PRIORITIES = [
     { value: 'low', label: 'Low' },
     { value: 'medium', label: 'Medium' },
     { value: 'high', label: 'High' }
