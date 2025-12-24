@@ -101,8 +101,8 @@
     color: white;
 }
 
-.icon-box.chores {
-    background-color: #6366f1;
+.icon-box.tasks {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .icon-box.bills {
