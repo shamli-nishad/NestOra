@@ -4,9 +4,7 @@ import {
     Home,
     CheckSquare,
     ShoppingBag,
-    Utensils,
-    CreditCard,
-    Calendar
+    Utensils
 } from 'lucide-react';
 import './BottomNav.css';
 
@@ -19,7 +17,7 @@ const BottomNav = () => {
             </NavLink>
             <NavLink to="/chores" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
                 <CheckSquare size={20} />
-                <span>Chores</span>
+                <span>Task</span>
             </NavLink>
             <NavLink to="/groceries" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
                 <ShoppingBag size={20} />
@@ -29,14 +27,6 @@ const BottomNav = () => {
                 <Utensils size={20} />
                 <span>Meals</span>
             </NavLink>
-            {/* <NavLink to="/bills" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
-                <CreditCard size={20} />
-                <span>Bills</span>
-            </NavLink> */}
-            {/* <NavLink to="/schedule" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
-                <Calendar size={20} />
-                <span>Schedule</span>
-            </NavLink> */}
         </nav>
     );
 };

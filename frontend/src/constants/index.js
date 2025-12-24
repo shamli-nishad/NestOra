@@ -1,11 +1,11 @@
-export const CHORE_CATEGORIES = [
-    'Kitchen',
-    'Bathroom',
-    'Living Room',
-    'Bedroom',
-    'Outdoor',
-    'Other'
-];
+export const TASK_SUBCATEGORIES = {
+    'Chores': ['Kitchen', 'Bathroom', 'Living Room', 'Bedroom', 'Outdoor', 'Laundry'],
+    'Health': ['Appointment', 'Medication', 'Exercise', 'Vitals'],
+    'Social': ['Call', 'Visit', 'Event', 'Birthday'],
+    'Bills': ['Utility', 'Subscription', 'Credit Card', 'Insurance', 'Rent'],
+    'School': ['Parents Conference', 'Homework', 'Birthday', 'Exam', 'Project', 'Talent Show', 'Go to School'],
+    'Other': ['General']
+};
 
 export const CHORE_FREQUENCIES = [
     'Daily',

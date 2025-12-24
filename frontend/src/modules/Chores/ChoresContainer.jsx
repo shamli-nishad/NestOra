@@ -36,6 +36,7 @@ const ChoresContainer = () => {
             id: crypto.randomUUID(),
             title: formData.get('title'),
             category: formData.get('category'),
+            subCategory: formData.get('subCategory'),
             frequency: formData.get('frequency'),
             frequencyDays: frequencyDays, // Array of days ['Mon', 'Wed']
             frequencyDate: formData.get('frequencyDate'), // '1'-'31'

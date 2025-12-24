@@ -8,7 +8,6 @@ import {
     Plus,
     Utensils,
     ShoppingBag,
-    CreditCard,
     ShoppingCart,
     CookingPot
 } from 'lucide-react';
@@ -22,7 +21,6 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const [summary, setSummary] = useState({
         pendingChores: 0,
-        overdueBills: 0,
         lowInventory: 0,
         monthlySpend: 0,
         pendingShopping: 0
@@ -31,7 +29,6 @@ const Dashboard = () => {
 
     // Data Hooks
     const [chores] = useLocalStorage('nestora_chores', []);
-    const [bills] = useLocalStorage('nestora_bills', []);
     const [inventory, setInventory] = useLocalStorage('nestora_inventory', []);
     const [expenses] = useLocalStorage('nestora_expenses', []);
     const [recipes] = useLocalStorage('nestora_recipes', []);
@@ -43,7 +40,6 @@ const Dashboard = () => {
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
         const pendingChoresCount = chores.filter(c => !c.completed && isChoreDue(c)).length;
-        const overdueBillsCount = bills.filter(b => b.status === 'pending' && new Date(b.dueDate) < now).length;
         const lowInventoryCount = inventory.filter(i => i.quantity < 2).length;
         const monthlySpendSum = expenses
             .filter(e => e.date && new Date(e.date) >= firstDayOfMonth)
@@ -53,12 +49,11 @@ const Dashboard = () => {
 
         setSummary({
             pendingChores: pendingChoresCount,
-            overdueBills: overdueBillsCount,
             lowInventory: lowInventoryCount,
             monthlySpend: monthlySpendSum,
             pendingShopping: pendingShoppingCount
         });
-    }, [chores, bills, inventory, expenses, shoppingSessions]);
+    }, [chores, inventory, expenses, shoppingSessions]);
 
     const handleLogCook = (e) => {
         e.preventDefault();
@@ -110,19 +105,11 @@ const Dashboard = () => {
                             <CheckSquare size={20} />
                         </div>
                         <div className="info">
-                            <span className="label">Pending Chores</span>
+                            <span className="label">Today's Tasks</span>
                             <span className="value">{summary.pendingChores}</span>
                         </div>
                     </div>
-                    {/* <div className="summary-card card" onClick={() => navigate('/bills')}>
-                        <div className="icon-box bills">
-                            <AlertCircle size={20} />
-                        </div>
-                        <div className="info">
-                            <span className="label">Overdue Bills</span>
-                            <span className="value">{summary.overdueBills}</span>
-                        </div>
-                    </div> */}
+
                     <div className="summary-card card" onClick={() => navigate('/groceries')}>
                         <div className="icon-box inventory">
                             <Package size={20} />
@@ -159,20 +146,12 @@ const Dashboard = () => {
                 <div className="actions-grid">
                     <button className="action-btn card" onClick={() => navigate('/chores', { state: { openAddModal: true } })}>
                         <Plus size={20} />
-                        <span>Add Chore</span>
+                        <span>Add Task</span>
                     </button>
-                    {/* <button className="action-btn card" onClick={() => navigate('/groceries', { state: { openAddModal: true } })}>
-                        <ShoppingBag size={20} />
-                        <span>Add Expense</span>
-                    </button> */}
                     <button className="action-btn card" onClick={() => navigate('/groceries', { state: { openPlanModal: true } })}>
                         <ShoppingCart size={20} />
                         <span>Plan Shopping</span>
                     </button>
-                    {/* <button className="action-btn card" onClick={() => navigate('/bills', { state: { openAddModal: true } })}>
-                        <CreditCard size={20} />
-                        <span>Add Bill</span>
-                    </button> */}
                     <button className="action-btn card" onClick={() => setIsCookModalOpen(true)}>
                         <CookingPot size={20} />
                         <span>Cook</span>

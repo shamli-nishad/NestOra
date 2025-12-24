@@ -20,7 +20,6 @@ const Sidebar = () => {
         { path: '/groceries', icon: <ShoppingBag size={20} />, label: 'Groceries' },
         { path: '/meals', icon: <Utensils size={20} />, label: 'Meals' },
         { path: '/bills', icon: <CreditCard size={20} />, label: 'Bills' },
-        { path: '/schedule', icon: <Calendar size={20} />, label: 'Schedule' },
     ];
 
     return (
