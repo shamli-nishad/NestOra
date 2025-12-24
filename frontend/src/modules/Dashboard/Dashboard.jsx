@@ -21,7 +21,7 @@ import { useRetentionPolicy } from '../../hooks/useRetentionPolicy'; // Still ne
 import BottomSheet from '../../components/UI/BottomSheet';
 import { isTaskDue, isTaskOverdue } from '../../utils/taskUtils';
 import './Dashboard.css';
-import '../tasks/tasks.css'; // Import shared styles for task-card
+import '../Tasks/Tasks.css'; // Import shared styles for task-card
 
 const Dashboard = () => {
     const navigate = useNavigate();
