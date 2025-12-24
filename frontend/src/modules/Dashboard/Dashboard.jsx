@@ -9,14 +9,19 @@ import {
     Utensils,
     ShoppingBag,
     ShoppingCart,
-    CookingPot
+    CookingPot,
+    Clock,
+    CheckCircle,
+    Circle
 } from 'lucide-react';
-import { getLocalDateTimeForInput } from '../../utils/dateUtils';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useRetentionPolicy } from '../../hooks/useRetentionPolicy';
+import { getLocalDateTimeForInput, formatDate } from '../../utils/dateUtils';
+import { useChores } from '../../hooks/useChores';
+import { useLocalStorage } from '../../hooks/useLocalStorage'; // Still needed for inventory etc.
+import { useRetentionPolicy } from '../../hooks/useRetentionPolicy'; // Still needed for history
 import BottomSheet from '../../components/UI/BottomSheet';
 import { isChoreDue } from '../../utils/choreUtils';
 import './Dashboard.css';
+import '../Chores/Chores.css'; // Import shared styles for chore-card
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -28,8 +33,7 @@ const Dashboard = () => {
     });
     const [isCookModalOpen, setIsCookModalOpen] = useState(false);
 
-    // Data Hooks
-    const [chores, setChores] = useLocalStorage('nestora_chores', []);
+    const { chores, toggleChore } = useChores();
     const [inventory, setInventory] = useLocalStorage('nestora_inventory', []);
     const [expenses] = useLocalStorage('nestora_expenses', []);
     const [recipes] = useLocalStorage('nestora_recipes', []);
@@ -38,26 +42,9 @@ const Dashboard = () => {
 
     const { applyRetention } = useRetentionPolicy();
 
-    // Auto-Cleanup Effect
+    // Auto-Cleanup Effect for History (Chores handled by hook)
     useEffect(() => {
-        // 1. Clean up Completed Tasks
-        // We only want to filter IF there are items to remove to avoid infinite loops if it triggers rerenders
-        // But useLocalStorage setter usually is stable.
-
-        // However, reading 'chores' inside useEffect creates a dependency.
-        // We generally want this to run ONCE on mount, but 'chores' might not be loaded yet?
-        // useLocalStorage reads synchronously from localStorage on init, so it should be fine.
-        // But to be safe, let's just run it when chores/history change, but strictly check length.
-
-        if (chores.length > 0) {
-            const cleanedChores = applyRetention(chores, 'completedAt', (item) => item.completed);
-            if (cleanedChores.length !== chores.length) {
-                console.log(`[Retention] Cleaning up ${chores.length - cleanedChores.length} old tasks.`);
-                setChores(cleanedChores);
-            }
-        }
-
-        // 2. Clean up Cooking History
+        // Clean up Cooking History
         if (cookingHistory.length > 0) {
             const cleanedHistory = applyRetention(cookingHistory, 'date');
             if (cleanedHistory.length !== cookingHistory.length) {
@@ -65,7 +52,7 @@ const Dashboard = () => {
                 setCookingHistory(cleanedHistory);
             }
         }
-    }, [chores, cookingHistory]); // Run when data is available/changes.
+    }, [cookingHistory]);
 
     useEffect(() => {
         // Calculate Summary
@@ -87,6 +74,18 @@ const Dashboard = () => {
             pendingShopping: pendingShoppingCount
         });
     }, [chores, inventory, expenses, shoppingSessions]);
+
+    // handleToggleChore replaced by toggleChore from hook
+
+    const todaysTasks = chores.filter(c => {
+        const isPendingAndDue = !c.completed && isChoreDue(c);
+        const isCompletedToday = c.completed && c.completedAt && new Date(c.completedAt).toDateString() === new Date().toDateString();
+        return isPendingAndDue || isCompletedToday;
+    }).sort((a, b) => {
+        // Sort: Pending first, then Completed
+        if (a.completed === b.completed) return 0;
+        return a.completed ? 1 : -1;
+    });
 
     const handleLogCook = (e) => {
         e.preventDefault();
@@ -195,6 +194,50 @@ const Dashboard = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Section 3: Today's Tasks List */}
+            {todaysTasks.length > 0 && (
+                <div className="dashboard-section">
+                    <h2>Tasks for Today</h2>
+                    <div className="todays-tasks-list">
+                        {todaysTasks.map(chore => (
+                            <div key={chore.id} className={`chore-card card ${chore.completed ? 'completed' : ''}`}>
+                                <button className="check-btn" onClick={() => toggleChore(chore.id)}>
+                                    {chore.completed ? <CheckCircle size={24} color="#10b981" /> : <Circle size={24} color="#cbd5e1" />}
+                                </button>
+                                <div className="chore-info">
+                                    <div className="title-row">
+                                        <h3>{chore.title}</h3>
+                                        {chore.estimatedTime && (
+                                            <span className="time-badge">
+                                                <Clock size={12} /> {chore.estimatedTime}m
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="meta">
+                                        <span className="category-tag">{chore.category}</span>
+                                        {chore.subCategory && <span className="subcategory-tag">{chore.subCategory}</span>}
+                                        <span className="frequency-tag">{chore.frequency}</span>
+                                        <span className={`priority-tag ${chore.priority}`}>
+                                            {chore.priority}
+                                        </span>
+                                        {chore.dueDate && (
+                                            <span className="due-date">
+                                                {formatDate(chore.dueDate)}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {chore.frequency === 'Weekly' && chore.frequencyDays && (
+                                        <div className="freq-details" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                            {chore.frequencyDays.join(', ')}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <BottomSheet
                 isOpen={isCookModalOpen}

@@ -6,6 +6,64 @@
     margin-bottom: var(--space-xl);
 }
 
+.todays-tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mini-task-card {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 12px;
+    transition: transform 0.2s ease;
+}
+
+.mini-task-card:active {
+    transform: scale(0.98);
+}
+
+.mini-task-card .check-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.circle-icon {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border-color);
+    /* #cbd5e1 */
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.check-btn:hover .circle-icon {
+    border-color: var(--primary);
+    background-color: rgba(37, 99, 235, 0.1);
+}
+
+.mini-task-card .task-title {
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.mini-task-card .task-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background-color: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+
 .dashboard-section h2 {
     font-size: 1.1rem;
     font-weight: 700;

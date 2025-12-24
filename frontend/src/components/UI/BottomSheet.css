@@ -4,41 +4,43 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
-    align-items: flex-end;
+    align-items: center;
+    /* Center vertically */
     z-index: 2000;
-    animation: fadeIn 0.3s ease;
+    animation: fadeIn 0.2s ease-out;
+    padding: 20px;
+    /* Prevent touching edges */
 }
 
 .bottom-sheet {
     background: var(--bg-card);
     width: 100%;
-    max-width: 480px;
-    border-radius: 24px 24px 0 0;
+    max-width: 440px;
+    /* Slightly narrower for card look */
+    border-radius: 24px;
+    /* Fully rounded corners */
     padding: 24px;
-    padding-bottom: 40px;
-    /* Safe area */
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     max-height: 85vh;
     overflow-y: auto;
+    position: relative;
 }
 
+/* Remove handle styles as it's not needed for modal */
 .sheet-handle {
-    width: 40px;
-    height: 4px;
-    background: var(--border-color);
-    border-radius: 2px;
-    margin: 0 auto 20px;
+    display: none;
 }
 
 .bottom-sheet h2 {
     margin: 0 0 20px 0;
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-size: 1.5rem;
+    font-weight: 700;
     color: var(--text-primary);
+    text-align: center;
 }
 
 @keyframes fadeIn {
@@ -51,12 +53,14 @@
     }
 }
 
-@keyframes slideUp {
+@keyframes scaleIn {
     from {
-        transform: translateY(100%);
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
     }
 
     to {
-        transform: translateY(0);
+        opacity: 1;
+        transform: scale(1) translateY(0);
     }
 }

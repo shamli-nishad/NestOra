@@ -133,27 +133,7 @@
     display: none;
 }
 
-.bottom-sheet {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: var(--bg-card);
-    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    padding: var(--space-xl);
-    animation: slideUp 0.3s ease-out;
-    z-index: 2001;
-    max-width: 480px;
-    margin: 0 auto;
-}
-
-.sheet-handle {
-    width: 40px;
-    height: 4px;
-    background-color: var(--border);
-    border-radius: 2px;
-    margin: 0 auto var(--space-lg);
-}
+/* Bottom Sheet styles removed - managed by component */
 
 .form-group {
     margin-bottom: var(--space-lg);

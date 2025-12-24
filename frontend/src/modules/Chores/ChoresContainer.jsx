@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useChores } from '../../hooks/useChores';
 import ChoresList from './ChoresList';
 
 const ChoresContainer = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('pending');
-    const [chores, setChores] = useLocalStorage('nestora_chores', []);
+
+    // Use centralized hook
+    const { chores, addChore, toggleChore, deleteChore, updateChore } = useChores();
+
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
@@ -18,15 +21,12 @@ const ChoresContainer = () => {
         }
     }, [location]);
 
-    const handleAddChore = (e) => {
+    const handleAddChoreWrapper = (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
 
         // Handle multi-select frequencyDays
         const frequencyDays = [];
-        // FormData.getAll isn't always available in older browsers, but likely fine here.
-        // Or we iterate. iterating over checkboxes with name="frequencyDays"
-        // React synthetic event target is the form.
         const checkboxes = e.target.querySelectorAll('input[name="frequencyDays"]:checked');
         checkboxes.forEach((checkbox) => {
             frequencyDays.push(checkbox.value);
@@ -38,38 +38,20 @@ const ChoresContainer = () => {
             category: formData.get('category'),
             subCategory: formData.get('subCategory'),
             frequency: formData.get('frequency'),
-            frequencyDays: frequencyDays, // Array of days ['Mon', 'Wed']
-            frequencyDate: formData.get('frequencyDate'), // '1'-'31'
+            frequencyDays: frequencyDays,
+            frequencyDate: formData.get('frequencyDate'),
             estimatedTime: formData.get('estimatedTime'),
             priority: formData.get('priority'),
-            dueDate: formData.get('dueDate'), // Only for One-time
+            dueDate: formData.get('dueDate'),
             completed: false,
             createdAt: new Date().toISOString(),
         };
-        setChores([...chores, newChore]);
+        addChore(newChore);
         setIsModalOpen(false);
     };
 
-    const toggleChore = (id) => {
-        setChores(chores.map(c => {
-            if (c.id === id) {
-                const newCompleted = !c.completed;
-                return {
-                    ...c,
-                    completed: newCompleted,
-                    completedAt: newCompleted ? new Date().toISOString() : null
-                };
-            }
-            return c;
-        }));
-    };
-
-    const deleteChore = (id) => {
-        setChores(chores.filter(c => c.id !== id));
-    };
-
-    const handleUpdateChore = (updatedChore) => {
-        setChores(chores.map(c => c.id === updatedChore.id ? updatedChore : c));
+    const handleUpdateChoreWrapper = (updatedChore) => {
+        updateChore(updatedChore);
         setIsModalOpen(false);
     };
 
@@ -87,10 +69,10 @@ const ChoresContainer = () => {
             setActiveTab={setActiveTab}
             isModalOpen={isModalOpen}
             setIsModalOpen={setIsModalOpen}
-            onAddChore={handleAddChore}
+            onAddChore={handleAddChoreWrapper}
             onToggleChore={toggleChore}
             onDeleteChore={deleteChore}
-            onUpdateChore={handleUpdateChore}
+            onUpdateChore={handleUpdateChoreWrapper}
             onCancel={handleCancel}
         />
     );

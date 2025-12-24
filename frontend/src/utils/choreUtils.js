@@ -46,7 +46,10 @@ export const isChoreDue = (chore, targetDate = new Date()) => {
             // The constraint says "due today (or overdue one-time tasks)".
             // So if today >= dueDate
             if (!chore.dueDate) return false;
-            const due = new Date(chore.dueDate);
+            // Parse YYYY-MM-DD manually to ensure local midnight time
+            // otherwise new Date('2025-12-25') is UTC, which might be Dec 24th local.
+            const [y, m, d] = chore.dueDate.split('-').map(Number);
+            const due = new Date(y, m - 1, d);
             due.setHours(0, 0, 0, 0);
             return date >= due;
 

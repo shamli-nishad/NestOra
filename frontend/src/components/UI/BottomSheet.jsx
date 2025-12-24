@@ -15,7 +15,7 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="bottom-sheet" onClick={(e) => e.stopPropagation()}>
-                <div className="sheet-handle"></div>
+                {/* <div className="sheet-handle"></div> */}
                 {title && <h2>{title}</h2>}
                 {children}
             </div>
