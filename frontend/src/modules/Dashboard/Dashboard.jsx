@@ -15,6 +15,7 @@ import {
 import { getLocalDateTimeForInput } from '../../utils/dateUtils';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import BottomSheet from '../../components/UI/BottomSheet';
+import { isChoreDue } from '../../utils/choreUtils';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -36,13 +37,12 @@ const Dashboard = () => {
     const [recipes] = useLocalStorage('nestora_recipes', []);
     const [cookingHistory, setCookingHistory] = useLocalStorage('nestora_cooking_history', []);
     const [shoppingSessions] = useLocalStorage('nestora_shopping_sessions', []);
-
     useEffect(() => {
         // Calculate Summary
         const now = new Date();
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const pendingChoresCount = chores.filter(c => !c.completed).length;
+        const pendingChoresCount = chores.filter(c => !c.completed && isChoreDue(c)).length;
         const overdueBillsCount = bills.filter(b => b.status === 'pending' && new Date(b.dueDate) < now).length;
         const lowInventoryCount = inventory.filter(i => i.quantity < 2).length;
         const monthlySpendSum = expenses

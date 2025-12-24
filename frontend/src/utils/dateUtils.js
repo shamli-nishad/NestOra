@@ -19,6 +19,19 @@ export const formatHeaderDate = (date = new Date()) => {
 
 export const formatDate = (dateString) => {
     if (!dateString) return '';
+    // Append time to ensure local timezone interpretation or force timezone agnostic display
+    // Easiest is to just split the YYYY-MM-DD string as the Date object constructor behavior 
+    // with hyphens is inconsistent across browsers/timezones (often treated as UTC).
+    // Replacing hyphens with slashes largely treats it as local time in many browsers, 
+    // but the most robust way for display is to create the date object carefully.
+
+    // Approach: Create date from parts to ensure local time midnight
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+        // new Date(year, monthIndex, day)
+        const date = new Date(parts[0], parts[1] - 1, parts[2]);
+        return date.toLocaleDateString();
+    }
     return new Date(dateString).toLocaleDateString();
 };
 

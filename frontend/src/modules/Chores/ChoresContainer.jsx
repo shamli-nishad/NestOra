@@ -21,14 +21,27 @@ const ChoresContainer = () => {
     const handleAddChore = (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
+
+        // Handle multi-select frequencyDays
+        const frequencyDays = [];
+        // FormData.getAll isn't always available in older browsers, but likely fine here.
+        // Or we iterate. iterating over checkboxes with name="frequencyDays"
+        // React synthetic event target is the form.
+        const checkboxes = e.target.querySelectorAll('input[name="frequencyDays"]:checked');
+        checkboxes.forEach((checkbox) => {
+            frequencyDays.push(checkbox.value);
+        });
+
         const newChore = {
             id: crypto.randomUUID(),
             title: formData.get('title'),
             category: formData.get('category'),
             frequency: formData.get('frequency'),
+            frequencyDays: frequencyDays, // Array of days ['Mon', 'Wed']
+            frequencyDate: formData.get('frequencyDate'), // '1'-'31'
             estimatedTime: formData.get('estimatedTime'),
             priority: formData.get('priority'),
-            dueDate: formData.get('dueDate'),
+            dueDate: formData.get('dueDate'), // Only for One-time
             completed: false,
             createdAt: new Date().toISOString(),
         };

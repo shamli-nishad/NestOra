@@ -19,6 +19,9 @@ const ChoresList = ({
 }) => {
     const filteredChores = chores.filter(c => activeTab === 'pending' ? !c.completed : c.completed);
 
+
+    const [selectedFrequency, setSelectedFrequency] = React.useState(CHORE_FREQUENCIES[0]);
+
     return (
         <div className="page chores-page">
             <SegmentedControl
@@ -67,6 +70,11 @@ const ChoresList = ({
                                         </span>
                                     )}
                                 </div>
+                                {chore.frequency === 'Weekly' && chore.frequencyDays && (
+                                    <div className="freq-details">
+                                        {chore.frequencyDays.join(', ')}
+                                    </div>
+                                )}
                             </div>
                             <button className="delete-btn" onClick={() => onDeleteChore(chore.id)}>
                                 <Trash2 size={18} color="#94a3b8" />
@@ -106,16 +114,49 @@ const ChoresList = ({
                     </div>
                     <div className="form-group">
                         <label>Frequency</label>
-                        <select name="frequency">
+                        <select
+                            name="frequency"
+                            value={selectedFrequency}
+                            onChange={(e) => setSelectedFrequency(e.target.value)}
+                        >
                             {CHORE_FREQUENCIES.map(freq => (
                                 <option key={freq} value={freq}>{freq}</option>
                             ))}
                         </select>
                     </div>
-                    <div className="form-group">
-                        <label>Due Date</label>
-                        <input type="date" name="dueDate" required />
-                    </div>
+
+                    {selectedFrequency === 'Weekly' && (
+                        <div className="form-group">
+                            <label>Repeat On</label>
+                            <div className="week-days-selector">
+                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                                    <label key={day} className="day-checkbox">
+                                        <input type="checkbox" name="frequencyDays" value={day} />
+                                        <span>{day}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {selectedFrequency === 'Monthly' && (
+                        <div className="form-group">
+                            <label>Day of Month</label>
+                            <select name="frequencyDate" defaultValue="1">
+                                {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                                    <option key={d} value={d}>{d}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {selectedFrequency === 'One-time' && (
+                        <div className="form-group">
+                            <label>Date</label>
+                            <input type="date" name="dueDate" required />
+                        </div>
+                    )}
+
                     <div className="modal-actions">
                         <button type="button" className="btn-secondary full-width" onClick={onCancel}>Cancel</button>
                         <button type="submit" className="btn-primary full-width">Add Chore</button>
