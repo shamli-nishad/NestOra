@@ -18,7 +18,7 @@ const BottomNav = () => {
             </NavLink>
             <NavLink to="/chores" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
                 <CheckSquare size={20} />
-                <span>Task</span>
+                <span>Tasks</span>
             </NavLink>
             <NavLink to="/groceries" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
                 <ShoppingBag size={20} />
