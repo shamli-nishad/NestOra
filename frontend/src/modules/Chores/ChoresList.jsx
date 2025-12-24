@@ -2,11 +2,66 @@ import React, { useEffect } from 'react';
 import { Plus, CheckCircle, Circle, Trash2, Clock, AlertCircle, Edit2 } from 'lucide-react';
 import { CHORE_FREQUENCIES, CHORE_PRIORITIES, TASK_SUBCATEGORIES } from '../../constants';
 import { formatDate } from '../../utils/dateUtils';
+import { isChoreDue, getNextDueDate, isChoreOverdue } from '../../utils/choreUtils';
 import BottomSheet from '../../components/UI/BottomSheet';
 import SegmentedControl from '../../components/UI/SegmentedControl';
 import FilterBar from '../../components/UI/FilterBar';
 import { useFilterSort } from '../../hooks/useFilterSort';
 import './Chores.css';
+
+// Helper Component for rendering a single chore card
+const ChoreItem = ({ chore, onToggleChore, handleEditClick, onDeleteChore }) => (
+    <div className={`chore-card card ${chore.completed ? 'completed' : ''} ${chore.isProjection ? 'projection' : ''} ${isChoreOverdue(chore) ? 'overdue' : ''}`}>
+        <button
+            className="check-btn"
+            onClick={() => onToggleChore(chore.id)}
+            disabled={chore.isProjection}
+            style={chore.isProjection ? { cursor: 'default', opacity: 0.5 } : {}}
+        >
+            {chore.completed ? <CheckCircle size={24} color="#10b981" /> : <Circle size={24} color={chore.isProjection ? "#e2e8f0" : "#cbd5e1"} />}
+        </button>
+        <div className="chore-info">
+            <div className="title-row">
+                <h3>{chore.title}</h3>
+                {chore.estimatedTime && (
+                    <span className="time-badge">
+                        <Clock size={12} /> {chore.estimatedTime}m
+                    </span>
+                )}
+            </div>
+            <div className="meta">
+                <span className="category-tag">{chore.category}</span>
+                {chore.subCategory && <span className="subcategory-tag">{chore.subCategory}</span>}
+                <span className="frequency-tag">{chore.frequency}</span>
+                <span className={`priority-tag ${chore.priority}`}>
+                    {chore.priority}
+                </span>
+                {chore.dueDate && (
+                    <span className="due-date">
+                        {formatDate(chore.dueDate)}
+                    </span>
+                )}
+            </div>
+            {chore.frequency === 'Weekly' && chore.frequencyDays && (
+                <div className="freq-details">
+                    {chore.frequencyDays.join(', ')}
+                </div>
+            )}
+        </div>
+        <div className="card-actions">
+            {!chore.completed && !chore.isProjection && (
+                <button className="btn-icon edit-btn" onClick={() => handleEditClick(chore)}>
+                    <Edit2 size={18} color="#94a3b8" />
+                </button>
+            )}
+            {!chore.isProjection && (
+                <button className="delete-btn" onClick={() => onDeleteChore(chore.id)}>
+                    <Trash2 size={18} color="#94a3b8" />
+                </button>
+            )}
+        </div>
+    </div>
+);
 
 const ChoresList = ({
     chores,
@@ -47,7 +102,9 @@ const ChoresList = ({
         sortConfig,
         setSortConfig
     } = useFilterSort(tabFilteredChores, {
-        initialSort: { key: 'dueDate', direction: 'asc' }, // Default sort by Due Date
+        initialSort: activeTab === 'completed'
+            ? { key: 'completedAt', direction: 'desc' }
+            : { key: 'dueDate', direction: 'asc' },
         sortFunctions
     });
 
@@ -65,6 +122,15 @@ const ChoresList = ({
             // setSelectedFrequency(CHORE_FREQUENCIES[0]);
         }
     }, [editingChore]);
+
+    // Update sort configuration when switching tabs
+    useEffect(() => {
+        if (activeTab === 'completed') {
+            setSortConfig({ key: 'completedAt', direction: 'desc' });
+        } else {
+            setSortConfig({ key: 'dueDate', direction: 'asc' });
+        }
+    }, [activeTab, setSortConfig]);
 
     const subCategories = TASK_SUBCATEGORIES[selectedCategory] || [];
 
@@ -189,51 +255,91 @@ const ChoresList = ({
                         <p>No tasks match your filters.</p>
                     </div>
                 ) : (
-                    filteredChores.map(chore => (
-                        <div key={chore.id} className={`chore-card card ${chore.completed ? 'completed' : ''}`}>
-                            <button className="check-btn" onClick={() => onToggleChore(chore.id)}>
-                                {chore.completed ? <CheckCircle size={24} color="#10b981" /> : <Circle size={24} color="#cbd5e1" />}
-                            </button>
-                            <div className="chore-info">
-                                <div className="title-row">
-                                    <h3>{chore.title}</h3>
-                                    {chore.estimatedTime && (
-                                        <span className="time-badge">
-                                            <Clock size={12} /> {chore.estimatedTime}m
-                                        </span>
-                                    )}
+                    activeTab === 'pending' ? (
+                        <>
+                            {/* Section: Tasks for Today */}
+                            {filteredChores.filter(c => isChoreDue(c)).length > 0 && (
+                                <div className="list-section">
+                                    <h3 className="section-header">Tasks for Today</h3>
+                                    {filteredChores.filter(c => isChoreDue(c)).map(chore => (
+                                        <ChoreItem
+                                            key={chore.id}
+                                            chore={chore}
+                                            onToggleChore={onToggleChore}
+                                            handleEditClick={handleEditClick}
+                                            onDeleteChore={onDeleteChore}
+                                        />
+                                    ))}
                                 </div>
-                                <div className="meta">
-                                    <span className="category-tag">{chore.category}</span>
-                                    {chore.subCategory && <span className="subcategory-tag">{chore.subCategory}</span>}
-                                    <span className="frequency-tag">{chore.frequency}</span>
-                                    <span className={`priority-tag ${chore.priority}`}>
-                                        {chore.priority}
-                                    </span>
-                                    {chore.dueDate && (
-                                        <span className="due-date">
-                                            {formatDate(chore.dueDate)}
-                                        </span>
-                                    )}
-                                </div>
-                                {chore.frequency === 'Weekly' && chore.frequencyDays && (
-                                    <div className="freq-details">
-                                        {chore.frequencyDays.join(', ')}
+                            )}
+
+                            {/* Section: Upcoming */}
+                            {(() => {
+                                // 1. Determine Upcoming Tasks
+                                // A. Pending tasks NOT due today (from the already filtered list)
+                                const pendingFuture = filteredChores.filter(c => !c.completed && !isChoreDue(c));
+
+                                // B. Completed Recurring tasks (Projected for next occurrence)
+                                // MUST source from 'chores' (all tasks) because 'filteredChores' only has pending ones due to activeTab context.
+                                // B. Completed Recurring tasks (Projected for next occurrence)
+                                // MUST source from 'chores' (all tasks) because 'filteredChores' only has pending ones due to activeTab context.
+                                const completedRecurring = chores.filter(c => {
+                                    if (!c.completed || c.frequency === 'One-time') return false;
+
+                                    // Manually apply current active filters
+                                    // filters.category is a string (e.g. 'All' or 'Health') or undefined
+                                    const catFilter = filters.category;
+                                    const priFilter = filters.priority;
+
+                                    const matchesCategory = !catFilter || catFilter === 'All' || catFilter === c.category;
+                                    const matchesPriority = !priFilter || priFilter === 'All' || priFilter === c.priority;
+
+                                    return matchesCategory && matchesPriority;
+                                });
+
+                                const projectedFuture = completedRecurring.map(c => ({
+                                    ...c,
+                                    id: `${c.id}-future`, // Unique ID
+                                    completed: false, // Visual state
+                                    dueDate: getNextDueDate(c),
+                                    isProjection: true
+                                })).filter(c => c.dueDate);
+
+                                const allUpcoming = [...pendingFuture, ...projectedFuture];
+
+                                // Sort by Date
+                                allUpcoming.sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
+
+                                if (allUpcoming.length === 0) return null;
+
+                                return (
+                                    <div className="list-section">
+                                        <h3 className="section-header">Upcoming</h3>
+                                        {allUpcoming.map(chore => (
+                                            <ChoreItem
+                                                key={chore.id}
+                                                chore={chore}
+                                                onToggleChore={chore.isProjection ? () => { } : onToggleChore}
+                                                handleEditClick={chore.isProjection ? () => { } : handleEditClick}
+                                                onDeleteChore={chore.isProjection ? () => { } : onDeleteChore}
+                                            />
+                                        ))}
                                     </div>
-                                )}
-                            </div>
-                            <div className="card-actions">
-                                {!chore.completed && (
-                                    <button className="btn-icon edit-btn" onClick={() => handleEditClick(chore)}>
-                                        <Edit2 size={18} color="#94a3b8" />
-                                    </button>
-                                )}
-                                <button className="delete-btn" onClick={() => onDeleteChore(chore.id)}>
-                                    <Trash2 size={18} color="#94a3b8" />
-                                </button>
-                            </div>
-                        </div>
-                    ))
+                                );
+                            })()}
+                        </>
+                    ) : (
+                        // Completed Tab - Flat List
+                        filteredChores.map(chore => (
+                            <ChoreItem
+                                key={chore.id}
+                                chore={chore}
+                                onToggleChore={onToggleChore}
+                                handleEditClick={handleEditClick}
+                                onDeleteChore={onDeleteChore}
+                            />
+                        ))
+                    )
                 )}
             </div>
 

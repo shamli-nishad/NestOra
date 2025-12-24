@@ -57,3 +57,81 @@ export const isChoreDue = (chore, targetDate = new Date()) => {
             return false;
     }
 };
+
+export const isChoreOverdue = (chore) => {
+    // Only one-time tasks can be overdue
+    if (chore.frequency !== 'One-time' || !chore.dueDate || chore.completed) {
+        return false;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [y, m, d] = chore.dueDate.split('-').map(Number);
+    const due = new Date(y, m - 1, d);
+    due.setHours(0, 0, 0, 0);
+
+    return due < today;
+};
+
+export const getNextDueDate = (chore) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const nextDate = new Date(today);
+
+    switch (chore.frequency) {
+        case 'Daily':
+            nextDate.setDate(today.getDate() + 1);
+            return nextDate.toISOString().split('T')[0];
+
+        case 'Weekly':
+            if (!chore.frequencyDays || chore.frequencyDays.length === 0) return null;
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const todayIndex = today.getDay();
+
+            // Find next day in the list
+            // Create array of indices from chore days
+            const targetIndices = chore.frequencyDays.map(d => days.indexOf(d)).sort((a, b) => a - b);
+
+            // Find first index > todayIndex
+            let nextIndex = targetIndices.find(i => i > todayIndex);
+
+            // If not found, wrap around to first index in list (next week)
+            let daysToAdd = 0;
+            if (nextIndex !== undefined) {
+                daysToAdd = nextIndex - todayIndex;
+            } else {
+                nextIndex = targetIndices[0];
+                daysToAdd = (7 - todayIndex) + nextIndex;
+            }
+
+            nextDate.setDate(today.getDate() + daysToAdd);
+            return nextDate.toISOString().split('T')[0];
+
+        case 'Monthly':
+            if (!chore.frequencyDate) return null;
+            const targetDate = parseInt(chore.frequencyDate);
+            const currentDay = today.getDate();
+
+            // If target date is in future this month, usually it would just be "Upcoming" pending task.
+            // But if we are calculating "Next Due" for a COMPLETED task (done today), 
+            // it implies next occurrence is Next Month.
+            // Wait, logic check: 
+            // If I do a monthly task early? (Today is 5th, due 15th). 
+            // If completed, "Next" is next month's 15th. 
+            // If due today (15th) and completed, "Next" is next month's 15th.
+
+            // Correct logic: Set date to targetDate. 
+            // If result <= today, add 1 month.
+            nextDate.setDate(targetDate);
+            if (nextDate <= today) {
+                nextDate.setMonth(nextDate.getMonth() + 1);
+            }
+            return nextDate.toISOString().split('T')[0];
+
+        case 'One-time':
+        default:
+            return null;
+    }
+};

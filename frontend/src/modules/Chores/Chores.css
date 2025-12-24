@@ -24,6 +24,16 @@
     text-decoration: line-through;
 }
 
+.chore-card.overdue {
+    border-left: 4px solid #dc2626;
+    background-color: #fef2f2;
+}
+
+.chore-card.overdue .due-date {
+    color: #dc2626;
+    font-weight: 700;
+}
+
 .check-btn {
     flex-shrink: 0;
 }
@@ -179,4 +189,21 @@
     text-align: center;
     color: var(--text-muted);
     gap: var(--space-md);
+}
+
+/* New Section Styles */
+.list-section {
+    margin-bottom: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.section-header {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: var(--space-xs);
+    padding-bottom: var(--space-sm);
+    border-bottom: 2px solid #f1f5f9;
 }

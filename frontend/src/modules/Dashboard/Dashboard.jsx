@@ -19,7 +19,7 @@ import { useChores } from '../../hooks/useChores';
 import { useLocalStorage } from '../../hooks/useLocalStorage'; // Still needed for inventory etc.
 import { useRetentionPolicy } from '../../hooks/useRetentionPolicy'; // Still needed for history
 import BottomSheet from '../../components/UI/BottomSheet';
-import { isChoreDue } from '../../utils/choreUtils';
+import { isChoreDue, isChoreOverdue } from '../../utils/choreUtils';
 import './Dashboard.css';
 import '../Chores/Chores.css'; // Import shared styles for chore-card
 
@@ -82,9 +82,17 @@ const Dashboard = () => {
         const isCompletedToday = c.completed && c.completedAt && new Date(c.completedAt).toDateString() === new Date().toDateString();
         return isPendingAndDue || isCompletedToday;
     }).sort((a, b) => {
-        // Sort: Pending first, then Completed
-        if (a.completed === b.completed) return 0;
-        return a.completed ? 1 : -1;
+        // Sort: Pending first, then Completed by date (most recent first)
+        if (a.completed !== b.completed) {
+            return a.completed ? 1 : -1;
+        }
+        // Both completed: sort by completedAt descending
+        if (a.completed && b.completed) {
+            const dateA = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+            const dateB = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+            return dateB - dateA; // Descending
+        }
+        return 0;
     });
 
     const handleLogCook = (e) => {
@@ -201,7 +209,7 @@ const Dashboard = () => {
                     <h2>Tasks for Today</h2>
                     <div className="todays-tasks-list">
                         {todaysTasks.map(chore => (
-                            <div key={chore.id} className={`chore-card card ${chore.completed ? 'completed' : ''}`}>
+                            <div key={chore.id} className={`chore-card card ${chore.completed ? 'completed' : ''} ${isChoreOverdue(chore) ? 'overdue' : ''}`}>
                                 <button className="check-btn" onClick={() => toggleChore(chore.id)}>
                                     {chore.completed ? <CheckCircle size={24} color="#10b981" /> : <Circle size={24} color="#cbd5e1" />}
                                 </button>
