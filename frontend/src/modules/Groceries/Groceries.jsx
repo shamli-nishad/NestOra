@@ -60,6 +60,12 @@ const Groceries = () => {
         setCurrentItem(null);
     };
 
+    const handleDeleteItem = (id) => {
+        if (window.confirm("Delete this item from Master List?")) {
+            setItems(items.filter(i => i.id !== id));
+        }
+    };
+
     const updateInventory = (itemId, change) => {
         const existing = inventory.find(i => i.itemId === itemId);
         if (existing) {
@@ -283,9 +289,14 @@ const Groceries = () => {
                                     <h3>{item.name}</h3>
                                     <p>{item.category} • Last: ${item.lastPrice}</p>
                                 </div>
-                                <button className="btn-icon" onClick={() => { setCurrentItem(item); setIsModalOpen(true); }}>
-                                    <Edit2 size={18} color="#94a3b8" />
-                                </button>
+                                <div className="card-actions">
+                                    <button className="btn-icon" onClick={() => { setCurrentItem(item); setIsModalOpen(true); }}>
+                                        <Edit2 size={18} color="#94a3b8" />
+                                    </button>
+                                    <button className="btn-icon" onClick={() => handleDeleteItem(item.id)}>
+                                        <Trash2 size={18} color="#ef4444" />
+                                    </button>
+                                </div>
                             </div>
                         ))
                     )}

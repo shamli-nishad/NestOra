@@ -68,6 +68,11 @@ const ChoresContainer = () => {
         setChores(chores.filter(c => c.id !== id));
     };
 
+    const handleUpdateChore = (updatedChore) => {
+        setChores(chores.map(c => c.id === updatedChore.id ? updatedChore : c));
+        setIsModalOpen(false);
+    };
+
     const handleCancel = () => {
         setIsModalOpen(false);
         if (location.state?.openAddModal) {
@@ -85,6 +90,7 @@ const ChoresContainer = () => {
             onAddChore={handleAddChore}
             onToggleChore={toggleChore}
             onDeleteChore={deleteChore}
+            onUpdateChore={handleUpdateChore}
             onCancel={handleCancel}
         />
     );

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, CheckCircle, Circle, Trash2, Clock, AlertCircle } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Plus, CheckCircle, Circle, Trash2, Clock, AlertCircle, Edit2 } from 'lucide-react';
 import { CHORE_FREQUENCIES, CHORE_PRIORITIES, TASK_SUBCATEGORIES } from '../../constants';
 import { formatDate } from '../../utils/dateUtils';
 import BottomSheet from '../../components/UI/BottomSheet';
@@ -17,8 +17,10 @@ const ChoresList = ({
     onAddChore,
     onToggleChore,
     onDeleteChore,
+    onUpdateChore,
     onCancel
 }) => {
+    const [editingChore, setEditingChore] = React.useState(null);
     // 1. First derive the list based on the active tab (Pending/Completed)
     const tabFilteredChores = React.useMemo(() => {
         return chores.filter(c => activeTab === 'pending' ? !c.completed : c.completed);
@@ -52,7 +54,102 @@ const ChoresList = ({
     const [selectedFrequency, setSelectedFrequency] = React.useState(CHORE_FREQUENCIES[0]);
     const [selectedCategory, setSelectedCategory] = React.useState(categories[0]);
 
+    useEffect(() => {
+        if (editingChore) {
+            setSelectedCategory(editingChore.category);
+            setSelectedFrequency(editingChore.frequency);
+        } else {
+            // Reset to defaults if not editing (optional, or rely on form reset)
+            // But we keep user's last selection or default? Let's reset for fresh add
+            // setSelectedCategory(categories[0]); 
+            // setSelectedFrequency(CHORE_FREQUENCIES[0]);
+        }
+    }, [editingChore]);
+
     const subCategories = TASK_SUBCATEGORIES[selectedCategory] || [];
+
+    const handleFormSubmit = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        // Handle multi-select frequencyDays
+        const frequencyDays = [];
+        const checkboxes = e.target.querySelectorAll('input[name="frequencyDays"]:checked');
+        checkboxes.forEach((checkbox) => {
+            frequencyDays.push(checkbox.value);
+        });
+
+        const choreData = {
+            title: formData.get('title'),
+            category: formData.get('category'),
+            subCategory: formData.get('subCategory'),
+            frequency: formData.get('frequency'),
+            frequencyDays: frequencyDays,
+            frequencyDate: formData.get('frequencyDate'),
+            estimatedTime: formData.get('estimatedTime'),
+            priority: formData.get('priority'),
+            dueDate: formData.get('dueDate'),
+            // Preserve existing fields if editing, else defaults
+            id: editingChore ? editingChore.id : undefined,
+            completed: editingChore ? editingChore.completed : false,
+            createdAt: editingChore ? editingChore.createdAt : undefined,
+            completedAt: editingChore ? editingChore.completedAt : undefined
+        };
+
+        if (editingChore) {
+            onUpdateChore(choreData);
+            setEditingChore(null);
+        } else {
+            // onAddChore expects event, we need to adapt it or change onAddChore
+            // Wait, ChoresContainer handleAddChore reads from e.target.
+            // We should probably lift the form extraction logic to Container or adapt here.
+            // Easier: just pass the event to onAddChore as before if not editing.
+            // BUT, if we want to reuse the form logic...
+            // Let's change ChoresContainer to accept data object? 
+            // Refactoring container is cleaner but let's stick to minimal changes:
+            // We can just call onAddChore(e) if not editing.
+            onAddChore(e);
+        }
+    };
+
+    // We need to intercept the submit to handle update manually OR let onAddChore handle it.
+    // Since onAddChore is tied to 'e.target', let's use a wrapper.
+    const handleSubmitWrapper = (e) => {
+        if (editingChore) {
+            e.preventDefault();
+            // Extract data manually for update
+            const formData = new FormData(e.target);
+            const frequencyDays = [];
+            e.target.querySelectorAll('input[name="frequencyDays"]:checked').forEach(cb => frequencyDays.push(cb.value));
+
+            const updated = {
+                ...editingChore,
+                title: formData.get('title'),
+                category: formData.get('category'),
+                subCategory: formData.get('subCategory'),
+                frequency: formData.get('frequency'),
+                frequencyDays: frequencyDays,
+                frequencyDate: formData.get('frequencyDate'),
+                priority: formData.get('priority'),
+                dueDate: formData.get('dueDate'),
+                estimatedTime: formData.get('estimatedTime') // if added field
+            };
+            onUpdateChore(updated);
+            setEditingChore(null);
+        } else {
+            onAddChore(e);
+        }
+    };
+
+    const handleEditClick = (chore) => {
+        setEditingChore(chore);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setEditingChore(null);
+        onCancel();
+    };
 
     return (
         <div className="page chores-page">
@@ -81,7 +178,7 @@ const ChoresList = ({
                 onSortChange={setSortConfig}
             />
 
-            <button className="btn-primary full-width add-btn-main" onClick={() => setIsModalOpen(true)}>
+            <button className="btn-primary full-width add-btn-main" onClick={() => { setEditingChore(null); setIsModalOpen(true); }}>
                 <Plus size={20} /> Add New Task
             </button>
 
@@ -125,9 +222,16 @@ const ChoresList = ({
                                     </div>
                                 )}
                             </div>
-                            <button className="delete-btn" onClick={() => onDeleteChore(chore.id)}>
-                                <Trash2 size={18} color="#94a3b8" />
-                            </button>
+                            <div className="card-actions">
+                                {!chore.completed && (
+                                    <button className="btn-icon edit-btn" onClick={() => handleEditClick(chore)}>
+                                        <Edit2 size={18} color="#94a3b8" />
+                                    </button>
+                                )}
+                                <button className="delete-btn" onClick={() => onDeleteChore(chore.id)}>
+                                    <Trash2 size={18} color="#94a3b8" />
+                                </button>
+                            </div>
                         </div>
                     ))
                 )}
@@ -135,13 +239,13 @@ const ChoresList = ({
 
             <BottomSheet
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title="Add New Task"
+                onClose={handleCloseModal}
+                title={editingChore ? "Edit Task" : "Add New Task"}
             >
-                <form onSubmit={onAddChore}>
+                <form onSubmit={handleSubmitWrapper}>
                     <div className="form-group">
                         <label>Task Title</label>
-                        <input name="title" required placeholder="e.g. Wash Dishes" autoFocus />
+                        <input name="title" required placeholder="e.g. Wash Dishes" autoFocus defaultValue={editingChore?.title} />
                     </div>
                     <div className="form-row">
                         <div className="form-group">
@@ -158,7 +262,7 @@ const ChoresList = ({
                         </div>
                         <div className="form-group">
                             <label>Sub-Category</label>
-                            <select name="subCategory">
+                            <select name="subCategory" defaultValue={editingChore?.subCategory}>
                                 {/* Only show subcategories if available */}
                                 {subCategories.map(sub => (
                                     <option key={sub} value={sub}>{sub}</option>
@@ -169,7 +273,7 @@ const ChoresList = ({
                     </div>
                     <div className="form-group">
                         <label>Priority</label>
-                        <select name="priority">
+                        <select name="priority" defaultValue={editingChore?.priority || 'medium'}>
                             {CHORE_PRIORITIES.map(priority => (
                                 <option key={priority.value} value={priority.value}>{priority.label}</option>
                             ))}
@@ -194,7 +298,12 @@ const ChoresList = ({
                             <div className="week-days-selector">
                                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                                     <label key={day} className="day-checkbox">
-                                        <input type="checkbox" name="frequencyDays" value={day} />
+                                        <input
+                                            type="checkbox"
+                                            name="frequencyDays"
+                                            value={day}
+                                            defaultChecked={editingChore?.frequencyDays?.includes(day)}
+                                        />
                                         <span>{day}</span>
                                     </label>
                                 ))}
@@ -205,7 +314,7 @@ const ChoresList = ({
                     {selectedFrequency === 'Monthly' && (
                         <div className="form-group">
                             <label>Day of Month</label>
-                            <select name="frequencyDate" defaultValue="1">
+                            <select name="frequencyDate" defaultValue={editingChore?.frequencyDate || "1"}>
                                 {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
                                     <option key={d} value={d}>{d}</option>
                                 ))}
@@ -216,13 +325,13 @@ const ChoresList = ({
                     {selectedFrequency === 'One-time' && (
                         <div className="form-group">
                             <label>Date</label>
-                            <input type="date" name="dueDate" required />
+                            <input type="date" name="dueDate" required defaultValue={editingChore?.dueDate} />
                         </div>
                     )}
 
                     <div className="modal-actions">
-                        <button type="button" className="btn-secondary full-width" onClick={onCancel}>Cancel</button>
-                        <button type="submit" className="btn-primary full-width">Add Task</button>
+                        <button type="button" className="btn-secondary full-width" onClick={handleCloseModal}>Cancel</button>
+                        <button type="submit" className="btn-primary full-width">{editingChore ? "Update Task" : "Add Task"}</button>
                     </div>
                 </form>
             </BottomSheet>

@@ -103,7 +103,7 @@ const Settings = () => {
                     <div className="setting-item">
                         <div className="setting-info">
                             <h3>Retention Period</h3>
-                            <p>Automatically delete completed tasks and history older than specific days.</p>
+                            <p>Automatically delete data older than specific days.</p>
                         </div>
                         <div className="retention-control">
                             <select
@@ -126,7 +126,7 @@ const Settings = () => {
                     <div className="setting-item">
                         <div className="setting-info">
                             <h3>Export Data</h3>
-                            <p>Download a backup of all your data (tasks, recipes, inventory).</p>
+                            <p>Download a backup of your data</p>
                         </div>
                         <button className="btn-secondary" onClick={handleExport}>
                             <Download size={18} /> Export JSON
@@ -171,8 +171,8 @@ const Settings = () => {
                 <div className="card settings-card">
                     <div className="about-content">
                         <p><strong>NestOra</strong> v1.0.0</p>
-                        <p>A simple home management app.</p>
-                        <p className="subtext">Data is stored locally on your device.</p>
+                        <p>A Simple Home Management App.</p>
+                        <p className="subtext">Data is stored locally on your device. Hence if you are moving to a new device, you will need to backup your data manually.</p>
                     </div>
                 </div>
             </div>
