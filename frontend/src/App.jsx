@@ -10,6 +10,7 @@ import Meals from './modules/Meals/Meals';
 
 
 import Dashboard from './modules/Dashboard/Dashboard';
+import Settings from './modules/Settings/Settings';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/chores" element={<Chores />} />
           <Route path="/meals" element={<Meals />} />
           <Route path="/groceries" element={<Groceries />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Layout>

@@ -1,0 +1,124 @@
+.settings-page {
+    padding-bottom: 80px;
+}
+
+.page-header {
+    margin-bottom: var(--space-xl);
+}
+
+.page-header h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.settings-section {
+    margin-bottom: var(--space-xl);
+}
+
+.settings-section h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-md);
+    padding-left: 4px;
+}
+
+.settings-card {
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.setting-info h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text-main);
+}
+
+.setting-info p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    max-width: 300px;
+}
+
+.divider {
+    height: 1px;
+    background-color: var(--border);
+    width: 100%;
+}
+
+.btn-secondary {
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    padding: 8px 16px;
+}
+
+.btn-danger {
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    padding: 8px 16px;
+    background-color: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-danger:hover {
+    background-color: #fca5a5;
+    color: #7f1d1d;
+}
+
+.danger-zone .setting-info h3 {
+    color: #dc2626;
+}
+
+.about-content {
+    text-align: center;
+    color: var(--text-main);
+}
+
+.about-content .subtext {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-md);
+    }
+
+    .setting-item button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .setting-info p {
+        max-width: 100%;
+    }
+}

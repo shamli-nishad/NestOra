@@ -4,7 +4,8 @@ import {
     Home,
     CheckSquare,
     ShoppingBag,
-    Utensils
+    Utensils,
+    Settings
 } from 'lucide-react';
 import './BottomNav.css';
 
@@ -26,6 +27,10 @@ const BottomNav = () => {
             <NavLink to="/meals" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
                 <Utensils size={20} />
                 <span>Meals</span>
+            </NavLink>
+            <NavLink to="/settings" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <Settings size={20} />
+                <span>Settings</span>
             </NavLink>
         </nav>
     );

@@ -46,10 +46,10 @@ const Sidebar = () => {
 
             <div className="sidebar-footer">
                 <div className="footer-actions">
-                    <button className="nav-item">
+                    <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <Settings size={20} />
                         <span>Settings</span>
-                    </button>
+                    </NavLink>
                 </div>
                 <div className="version-info">
                     <span className="version">v{APP_VERSION}</span>
