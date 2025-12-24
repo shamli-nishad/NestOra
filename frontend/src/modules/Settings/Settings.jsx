@@ -1,9 +1,11 @@
 import React, { useRef } from 'react';
-import { Download, Upload, Trash2, AlertTriangle, CheckCircle, Smartphone, Database } from 'lucide-react';
+import { Download, Upload, Trash2, AlertTriangle, CheckCircle, Smartphone, Database, CalendarClock } from 'lucide-react';
+import { useRetentionPolicy } from '../../hooks/useRetentionPolicy';
 import './Settings.css';
 
 const Settings = () => {
     const fileInputRef = useRef(null);
+    const { retentionDays, updateRetentionDays } = useRetentionPolicy();
 
     const getAllData = () => {
         const data = {};
@@ -94,6 +96,29 @@ const Settings = () => {
             <header className="page-header">
                 <h1>Settings</h1>
             </header>
+
+            <div className="settings-section">
+                <h2><CalendarClock size={20} /> Data Retention</h2>
+                <div className="card settings-card">
+                    <div className="setting-item">
+                        <div className="setting-info">
+                            <h3>Retention Period</h3>
+                            <p>Automatically delete completed tasks and history older than specific days.</p>
+                        </div>
+                        <div className="retention-control">
+                            <select
+                                value={retentionDays}
+                                onChange={(e) => updateRetentionDays(e.target.value)}
+                                className="retention-select"
+                            >
+                                {Array.from({ length: 14 }, (_, i) => i + 1).map(day => (
+                                    <option key={day} value={day}>{day} Days</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div className="settings-section">
                 <h2><Database size={20} /> Data Management</h2>

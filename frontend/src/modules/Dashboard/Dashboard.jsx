@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { getLocalDateTimeForInput } from '../../utils/dateUtils';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useRetentionPolicy } from '../../hooks/useRetentionPolicy';
 import BottomSheet from '../../components/UI/BottomSheet';
 import { isChoreDue } from '../../utils/choreUtils';
 import './Dashboard.css';
@@ -28,12 +29,44 @@ const Dashboard = () => {
     const [isCookModalOpen, setIsCookModalOpen] = useState(false);
 
     // Data Hooks
-    const [chores] = useLocalStorage('nestora_chores', []);
+    const [chores, setChores] = useLocalStorage('nestora_chores', []);
     const [inventory, setInventory] = useLocalStorage('nestora_inventory', []);
     const [expenses] = useLocalStorage('nestora_expenses', []);
     const [recipes] = useLocalStorage('nestora_recipes', []);
     const [cookingHistory, setCookingHistory] = useLocalStorage('nestora_cooking_history', []);
     const [shoppingSessions] = useLocalStorage('nestora_shopping_sessions', []);
+
+    const { applyRetention } = useRetentionPolicy();
+
+    // Auto-Cleanup Effect
+    useEffect(() => {
+        // 1. Clean up Completed Tasks
+        // We only want to filter IF there are items to remove to avoid infinite loops if it triggers rerenders
+        // But useLocalStorage setter usually is stable.
+
+        // However, reading 'chores' inside useEffect creates a dependency.
+        // We generally want this to run ONCE on mount, but 'chores' might not be loaded yet?
+        // useLocalStorage reads synchronously from localStorage on init, so it should be fine.
+        // But to be safe, let's just run it when chores/history change, but strictly check length.
+
+        if (chores.length > 0) {
+            const cleanedChores = applyRetention(chores, 'completedAt', (item) => item.completed);
+            if (cleanedChores.length !== chores.length) {
+                console.log(`[Retention] Cleaning up ${chores.length - cleanedChores.length} old tasks.`);
+                setChores(cleanedChores);
+            }
+        }
+
+        // 2. Clean up Cooking History
+        if (cookingHistory.length > 0) {
+            const cleanedHistory = applyRetention(cookingHistory, 'date');
+            if (cleanedHistory.length !== cookingHistory.length) {
+                console.log(`[Retention] Cleaning up ${cookingHistory.length - cleanedHistory.length} history items.`);
+                setCookingHistory(cleanedHistory);
+            }
+        }
+    }, [chores, cookingHistory]); // Run when data is available/changes.
+
     useEffect(() => {
         // Calculate Summary
         const now = new Date();

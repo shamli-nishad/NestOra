@@ -51,7 +51,17 @@ const ChoresContainer = () => {
     };
 
     const toggleChore = (id) => {
-        setChores(chores.map(c => c.id === id ? { ...c, completed: !c.completed } : c));
+        setChores(chores.map(c => {
+            if (c.id === id) {
+                const newCompleted = !c.completed;
+                return {
+                    ...c,
+                    completed: newCompleted,
+                    completedAt: newCompleted ? new Date().toISOString() : null
+                };
+            }
+            return c;
+        }));
     };
 
     const deleteChore = (id) => {
