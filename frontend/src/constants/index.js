@@ -1,3 +1,25 @@
+export const CHORE_CATEGORIES = [
+    'Kitchen',
+    'Bathroom',
+    'Living Room',
+    'Bedroom',
+    'Outdoor',
+    'Other'
+];
+
+export const CHORE_FREQUENCIES = [
+    'Daily',
+    'Weekly',
+    'Monthly',
+    'One-time'
+];
+
+export const CHORE_PRIORITIES = [
+    { value: 'low', label: 'Low' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'high', label: 'High' }
+];
+
 export const GROCERY_CATEGORIES = [
     'Dairy',
     'Produce',
@@ -37,3 +59,11 @@ export const UNIT_LIST = [
     'Other'
 ];
 
+export const MEAL_TYPES = [
+    'Breakfast',
+    'Lunch',
+    'Dinner',
+    'Snack',
+    'Appetizer',
+    'Dessert'
+];

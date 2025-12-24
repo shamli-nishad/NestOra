@@ -12,6 +12,9 @@ import {
     ShoppingCart,
     CookingPot
 } from 'lucide-react';
+import { getLocalDateTimeForInput } from '../../utils/dateUtils';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import BottomSheet from '../../components/UI/BottomSheet';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -24,20 +27,17 @@ const Dashboard = () => {
         pendingShopping: 0
     });
     const [isCookModalOpen, setIsCookModalOpen] = useState(false);
-    const [recipes, setRecipes] = useState([]);
-    const [inventory, setInventory] = useState([]);
+
+    // Data Hooks
+    const [chores] = useLocalStorage('nestora_chores', []);
+    const [bills] = useLocalStorage('nestora_bills', []);
+    const [inventory, setInventory] = useLocalStorage('nestora_inventory', []);
+    const [expenses] = useLocalStorage('nestora_expenses', []);
+    const [recipes] = useLocalStorage('nestora_recipes', []);
+    const [cookingHistory, setCookingHistory] = useLocalStorage('nestora_cooking_history', []);
+    const [shoppingSessions] = useLocalStorage('nestora_shopping_sessions', []);
 
     useEffect(() => {
-        // Fetch data from localStorage
-        const chores = JSON.parse(localStorage.getItem('nestora_chores') || '[]');
-        const bills = JSON.parse(localStorage.getItem('nestora_bills') || '[]');
-        const inventoryData = JSON.parse(localStorage.getItem('nestora_inventory') || '[]');
-        const expenses = JSON.parse(localStorage.getItem('nestora_expenses') || '[]');
-        const recipesData = JSON.parse(localStorage.getItem('nestora_recipes') || '[]');
-
-        setInventory(inventoryData);
-        setRecipes(recipesData);
-
         // Calculate Summary
         const now = new Date();
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -49,7 +49,7 @@ const Dashboard = () => {
             .filter(e => e.date && new Date(e.date) >= firstDayOfMonth)
             .reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
-        const pendingShoppingCount = JSON.parse(localStorage.getItem('nestora_shopping_sessions') || '[]').length;
+        const pendingShoppingCount = shoppingSessions.length;
 
         setSummary({
             pendingChores: pendingChoresCount,
@@ -58,7 +58,7 @@ const Dashboard = () => {
             monthlySpend: monthlySpendSum,
             pendingShopping: pendingShoppingCount
         });
-    }, []);
+    }, [chores, bills, inventory, expenses, shoppingSessions]);
 
     const handleLogCook = (e) => {
         e.preventDefault();
@@ -78,9 +78,8 @@ const Dashboard = () => {
             date: new Date(dateTime).toISOString()
         };
 
-        const existingHistory = JSON.parse(localStorage.getItem('nestora_cooking_history') || '[]');
-        const updatedHistory = [historyEntry, ...existingHistory];
-        localStorage.setItem('nestora_cooking_history', JSON.stringify(updatedHistory));
+        const updatedHistory = [historyEntry, ...cookingHistory];
+        setCookingHistory(updatedHistory);
 
         // Reduce inventory
         let updatedInventory = [...inventory];
@@ -95,7 +94,6 @@ const Dashboard = () => {
         });
         const finalInventory = updatedInventory.filter(i => i.quantity > 0);
         setInventory(finalInventory);
-        localStorage.setItem('nestora_inventory', JSON.stringify(finalInventory));
 
         setIsCookModalOpen(false);
         alert(`Logged "${recipe.title}"! Inventory updated.`);
@@ -186,42 +184,40 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {isCookModalOpen && (
-                <div className="modal-overlay" onClick={() => setIsCookModalOpen(false)}>
-                    <div className="bottom-sheet" onClick={e => e.stopPropagation()}>
-                        <div className="sheet-handle"></div>
-                        <h2>Log Cooking</h2>
-                        <form onSubmit={handleLogCook}>
-                            <div className="form-group">
-                                <label>What did you cook?</label>
-                                <select name="recipeId" required>
-                                    <option value="">Select a recipe...</option>
-                                    {recipes.map(r => (
-                                        <option key={r.id} value={r.id}>{r.title}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Date & Time</label>
-                                <input
-                                    type="datetime-local"
-                                    name="dateTime"
-                                    defaultValue={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Comments</label>
-                                <textarea name="comments" rows="2" placeholder="Any notes about today's cooking?"></textarea>
-                            </div>
-                            <div className="modal-actions">
-                                <button type="button" className="btn-secondary" onClick={() => setIsCookModalOpen(false)}>Cancel</button>
-                                <button type="submit" className="btn-primary flex-1">Log Cooking</button>
-                            </div>
-                        </form>
+            <BottomSheet
+                isOpen={isCookModalOpen}
+                onClose={() => setIsCookModalOpen(false)}
+                title="Log Cooking"
+            >
+                <form onSubmit={handleLogCook}>
+                    <div className="form-group">
+                        <label>What did you cook?</label>
+                        <select name="recipeId" required>
+                            <option value="">Select a recipe...</option>
+                            {recipes.map(r => (
+                                <option key={r.id} value={r.id}>{r.title}</option>
+                            ))}
+                        </select>
                     </div>
-                </div>
-            )}
+                    <div className="form-group">
+                        <label>Date & Time</label>
+                        <input
+                            type="datetime-local"
+                            name="dateTime"
+                            defaultValue={getLocalDateTimeForInput()}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Comments</label>
+                        <textarea name="comments" rows="2" placeholder="Any notes about today's cooking?"></textarea>
+                    </div>
+                    <div className="modal-actions">
+                        <button type="button" className="btn-secondary" onClick={() => setIsCookModalOpen(false)}>Cancel</button>
+                        <button type="submit" className="btn-primary flex-1">Log Cooking</button>
+                    </div>
+                </form>
+            </BottomSheet>
         </div>
     );
 };

@@ -1,29 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus, Utensils, History, Check, Trash2, Edit2, ChevronRight, Clock, Users, Timer, Info, Flame, CookingPot } from 'lucide-react';
+import { MEAL_TYPES } from '../../constants';
+import { formatDate, formatDateTime, getLocalDateTimeForInput } from '../../utils/dateUtils';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import BottomSheet from '../../components/UI/BottomSheet';
+import SegmentedControl from '../../components/UI/SegmentedControl';
 import './Meals.css';
-import { MEAL_TYPES } from './constants';
 
 const Meals = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('recipes'); // recipes, history
-    const [recipes, setRecipes] = useState(() => {
-        const saved = localStorage.getItem('nestora_recipes');
-        return saved ? JSON.parse(saved) : [];
-    });
-    const [history, setHistory] = useState(() => {
-        const saved = localStorage.getItem('nestora_cooking_history');
-        return saved ? JSON.parse(saved) : [];
-    });
-    const [masterItems] = useState(() => {
-        const saved = localStorage.getItem('nestora_master_items');
-        return saved ? JSON.parse(saved) : [];
-    });
-    const [inventory, setInventory] = useState(() => {
-        const saved = localStorage.getItem('nestora_inventory');
-        return saved ? JSON.parse(saved) : [];
-    });
+    const [recipes, setRecipes] = useLocalStorage('nestora_recipes', []);
+    const [history, setHistory] = useLocalStorage('nestora_cooking_history', []);
+    const [masterItems] = useLocalStorage('nestora_master_items', []);
+    const [inventory, setInventory] = useLocalStorage('nestora_inventory', []);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentRecipe, setCurrentRecipe] = useState(null);
     const [selectedIngredients, setSelectedIngredients] = useState([]);
@@ -51,13 +43,7 @@ const Meals = () => {
         }
     }, [location]);
 
-    useEffect(() => {
-        localStorage.setItem('nestora_recipes', JSON.stringify(recipes));
-    }, [recipes]);
 
-    useEffect(() => {
-        localStorage.setItem('nestora_cooking_history', JSON.stringify(history));
-    }, [history]);
 
     const handleAddRecipe = (e) => {
         e.preventDefault();
@@ -152,7 +138,6 @@ const Meals = () => {
         });
         const finalInventory = updatedInventory.filter(i => i.quantity > 0);
         setInventory(finalInventory);
-        localStorage.setItem('nestora_inventory', JSON.stringify(finalInventory));
 
         setIsCookModalOpen(false);
         setRecipeToCook(null);
@@ -170,10 +155,14 @@ const Meals = () => {
     return (
         <div className="page meals-page">
 
-            <div className="segmented-control">
-                <button className={`segment ${activeTab === 'recipes' ? 'active' : ''}`} onClick={() => setActiveTab('recipes')}>Recipes</button>
-                <button className={`segment ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>History</button>
-            </div>
+            <SegmentedControl
+                options={[
+                    { value: 'recipes', label: 'Recipes' },
+                    { value: 'history', label: 'History' }
+                ]}
+                value={activeTab}
+                onChange={setActiveTab}
+            />
 
             {activeTab === 'recipes' && (
                 <div className="recipe-list">
@@ -235,7 +224,7 @@ const Meals = () => {
                         <div key={entry.id} className="history-item card">
                             <div className="info">
                                 <h3>{entry.recipeTitle}</h3>
-                                <p>{new Date(entry.date).toLocaleDateString()} at {new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                <p>{formatDateTime(entry.date)}</p>
                                 {entry.comments && <p className="history-comments">"{entry.comments}"</p>}
                             </div>
                             <ChevronRight size={20} color="#cbd5e1" />
@@ -244,137 +233,133 @@ const Meals = () => {
                 </div>
             )}
 
-            {isModalOpen && (
-                <div className="modal-overlay" onClick={handleCancel}>
-                    <div className="bottom-sheet" onClick={e => e.stopPropagation()}>
-                        <div className="sheet-handle"></div>
-                        <h2>{currentRecipe ? 'Edit Recipe' : 'Add New Recipe'}</h2>
-                        <form onSubmit={handleAddRecipe}>
-                            <div className="form-group">
-                                <label>Recipe Title</label>
-                                <input name="title" defaultValue={currentRecipe?.title} required placeholder="e.g. Pasta Carbonara" autoFocus />
-                            </div>
-
-                            <div className="form-group">
-                                <label>Steps (one per line)</label>
-                                <textarea name="steps" defaultValue={currentRecipe?.steps?.join('\n')} rows="3" placeholder="1. Boil water..."></textarea>
-                            </div>
-
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Cook Time (m)</label>
-                                    <input type="number" name="cookTime" defaultValue={currentRecipe?.cookTime || 30} required />
-                                </div>
-                                <div className="form-group">
-                                    <label>Calories (kcal)</label>
-                                    <input type="number" name="calories" defaultValue={currentRecipe?.calories} placeholder="e.g. 450" />
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label className="checkbox-label">
-                                    <input type="checkbox" checked={earlyPrep} onChange={(e) => setEarlyPrep(e.target.checked)} />
-                                    <span>Requires Early Preparation</span>
-                                </label>
-                            </div>
-
-                            {earlyPrep && (
-                                <div className="form-group animate-slide-down">
-                                    <label>Early Prep Steps</label>
-                                    <textarea
-                                        name="earlyPrepSteps"
-                                        defaultValue={currentRecipe?.earlyPrepSteps}
-                                        rows="2"
-                                        placeholder="e.g. Marinate chicken for 30 mins..."
-                                    ></textarea>
-                                </div>
-                            )}
-
-                            <div className="form-group">
-                                <label>Suitability (Select Times)</label>
-                                <div className="tag-cloud">
-                                    {MEAL_TYPES.map(type => (
-                                        <button
-                                            key={type}
-                                            type="button"
-                                            className={`tag-btn ${selectedMealTypes.includes(type) ? 'active' : ''}`}
-                                            onClick={() => toggleMealType(type)}
-                                        >
-                                            {type}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label>Ingredients</label>
-                                <div className="ingredient-selector">
-                                    <select onChange={(e) => { addIngredient(e.target.value); e.target.value = ""; }}>
-                                        <option value="">+ Add Ingredient</option>
-                                        {masterItems.filter(mi => !selectedIngredients.find(si => si.itemId === mi.id)).map(item => (
-                                            <option key={item.id} value={item.id}>{item.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="selected-ingredients">
-                                    {selectedIngredients.map(ing => (
-                                        <div key={ing.itemId} className="ing-edit-row">
-                                            <span>{ing.name}</span>
-                                            <button type="button" className="btn-icon" onClick={() => removeIngredient(ing.itemId)}><Trash2 size={16} color="#ef4444" /></button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="modal-actions">
-                                <button type="button" className="btn-secondary" onClick={handleCancel}>Cancel</button>
-                                {currentRecipe && (
-                                    <button type="button" className="btn-danger-outline" onClick={() => handleDeleteRecipe(currentRecipe.id)}>
-                                        <Trash2 size={16} /> Delete
-                                    </button>
-                                )}
-                                <button type="submit" className="btn-primary flex-1">{currentRecipe ? 'Update' : 'Create Recipe'}</button>
-                            </div>
-                        </form>
+            <BottomSheet
+                isOpen={isModalOpen}
+                onClose={handleCancel}
+                title={currentRecipe ? 'Edit Recipe' : 'Add New Recipe'}
+            >
+                <form onSubmit={handleAddRecipe}>
+                    <div className="form-group">
+                        <label>Recipe Title</label>
+                        <input name="title" defaultValue={currentRecipe?.title} required placeholder="e.g. Pasta Carbonara" autoFocus />
                     </div>
-                </div>
-            )}
 
-            {isCookModalOpen && (
-                <div className="modal-overlay" onClick={() => { setIsCookModalOpen(false); setRecipeToCook(null); }}>
-                    <div className="bottom-sheet" onClick={e => e.stopPropagation()}>
-                        <div className="sheet-handle"></div>
-                        <h2>Log Cooking</h2>
-                        <form onSubmit={handleLogCook}>
-                            <div className="form-group">
-                                <label>What did you cook?</label>
-                                <select name="recipeId" defaultValue={recipeToCook?.id} required>
-                                    <option value="">Select a recipe...</option>
-                                    {recipes.map(r => (
-                                        <option key={r.id} value={r.id}>{r.title}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Date & Time</label>
-                                <input
-                                    type="datetime-local"
-                                    name="dateTime"
-                                    defaultValue={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Comments</label>
-                                <textarea name="comments" rows="2" placeholder="Any notes about this cook?"></textarea>
-                            </div>
-                            <div className="modal-actions">
-                                <button type="button" className="btn-secondary" onClick={() => { setIsCookModalOpen(false); setRecipeToCook(null); }}>Cancel</button>
-                                <button type="submit" className="btn-primary flex-1">Log Cooking</button>
-                            </div>
-                        </form>
+                    <div className="form-group">
+                        <label>Steps (one per line)</label>
+                        <textarea name="steps" defaultValue={currentRecipe?.steps?.join('\n')} rows="3" placeholder="1. Boil water..."></textarea>
                     </div>
-                </div>
-            )}
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label>Cook Time (m)</label>
+                            <input type="number" name="cookTime" defaultValue={currentRecipe?.cookTime || 30} required />
+                        </div>
+                        <div className="form-group">
+                            <label>Calories (kcal)</label>
+                            <input type="number" name="calories" defaultValue={currentRecipe?.calories} placeholder="e.g. 450" />
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="checkbox-label">
+                            <input type="checkbox" checked={earlyPrep} onChange={(e) => setEarlyPrep(e.target.checked)} />
+                            <span>Requires Early Preparation</span>
+                        </label>
+                    </div>
+
+                    {earlyPrep && (
+                        <div className="form-group animate-slide-down">
+                            <label>Early Prep Steps</label>
+                            <textarea
+                                name="earlyPrepSteps"
+                                defaultValue={currentRecipe?.earlyPrepSteps}
+                                rows="2"
+                                placeholder="e.g. Marinate chicken for 30 mins..."
+                            ></textarea>
+                        </div>
+                    )}
+
+                    <div className="form-group">
+                        <label>Suitability (Select Times)</label>
+                        <div className="tag-cloud">
+                            {MEAL_TYPES.map(type => (
+                                <button
+                                    key={type}
+                                    type="button"
+                                    className={`tag-btn ${selectedMealTypes.includes(type) ? 'active' : ''}`}
+                                    onClick={() => toggleMealType(type)}
+                                >
+                                    {type}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label>Ingredients</label>
+                        <div className="ingredient-selector">
+                            <select onChange={(e) => { addIngredient(e.target.value); e.target.value = ""; }}>
+                                <option value="">+ Add Ingredient</option>
+                                {masterItems.filter(mi => !selectedIngredients.find(si => si.itemId === mi.id)).map(item => (
+                                    <option key={item.id} value={item.id}>{item.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="selected-ingredients">
+                            {selectedIngredients.map(ing => (
+                                <div key={ing.itemId} className="ing-edit-row">
+                                    <span>{ing.name}</span>
+                                    <button type="button" className="btn-icon" onClick={() => removeIngredient(ing.itemId)}><Trash2 size={16} color="#ef4444" /></button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="modal-actions">
+                        <button type="button" className="btn-secondary" onClick={handleCancel}>Cancel</button>
+                        {currentRecipe && (
+                            <button type="button" className="btn-danger-outline" onClick={() => handleDeleteRecipe(currentRecipe.id)}>
+                                <Trash2 size={16} /> Delete
+                            </button>
+                        )}
+                        <button type="submit" className="btn-primary flex-1">{currentRecipe ? 'Update' : 'Create Recipe'}</button>
+                    </div>
+                </form>
+            </BottomSheet>
+
+            <BottomSheet
+                isOpen={isCookModalOpen}
+                onClose={() => { setIsCookModalOpen(false); setRecipeToCook(null); }}
+                title="Log Cooking"
+            >
+                <form onSubmit={handleLogCook}>
+                    <div className="form-group">
+                        <label>What did you cook?</label>
+                        <select name="recipeId" defaultValue={recipeToCook?.id} required>
+                            <option value="">Select a recipe...</option>
+                            {recipes.map(r => (
+                                <option key={r.id} value={r.id}>{r.title}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Date & Time</label>
+                        <input
+                            type="datetime-local"
+                            name="dateTime"
+                            defaultValue={getLocalDateTimeForInput()}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Comments</label>
+                        <textarea name="comments" rows="2" placeholder="Any notes about this cook?"></textarea>
+                    </div>
+                    <div className="modal-actions">
+                        <button type="button" className="btn-secondary" onClick={() => { setIsCookModalOpen(false); setRecipeToCook(null); }}>Cancel</button>
+                        <button type="submit" className="btn-primary flex-1">Log Cooking</button>
+                    </div>
+                </form>
+            </BottomSheet>
         </div>
     );
 };

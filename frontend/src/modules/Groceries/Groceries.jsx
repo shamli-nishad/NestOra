@@ -1,25 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus, ShoppingBag, Package, ChevronRight, Check, Trash2, Edit2, ShoppingCart, CheckSquare } from 'lucide-react';
+import { GROCERY_CATEGORIES, SHOP_LIST, UNIT_LIST } from '../../constants';
+import { formatDate } from '../../utils/dateUtils';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import BottomSheet from '../../components/UI/BottomSheet';
+import SegmentedControl from '../../components/UI/SegmentedControl';
 import './Groceries.css';
-import { GROCERY_CATEGORIES, SHOP_LIST, UNIT_LIST } from './constants';
 
 const Groceries = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('inventory'); // inventory, master, shopping
-    const [items, setItems] = useState(() => {
-        const saved = localStorage.getItem('nestora_master_items');
-        return saved ? JSON.parse(saved) : [];
-    });
-    const [inventory, setInventory] = useState(() => {
-        const saved = localStorage.getItem('nestora_inventory');
-        return saved ? JSON.parse(saved) : [];
-    });
-    const [shoppingSessions, setShoppingSessions] = useState(() => {
-        const saved = localStorage.getItem('nestora_shopping_sessions');
-        return saved ? JSON.parse(saved) : [];
-    });
+    const [items, setItems] = useLocalStorage('nestora_master_items', []);
+    const [inventory, setInventory] = useLocalStorage('nestora_inventory', []);
+    const [shoppingSessions, setShoppingSessions] = useLocalStorage('nestora_shopping_sessions', []);
+    const [expenses, setExpenses] = useLocalStorage('nestora_expenses', []);
     const [shoppingSession, setShoppingSession] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState(null);
@@ -41,17 +37,7 @@ const Groceries = () => {
         }
     }, [location]);
 
-    useEffect(() => {
-        localStorage.setItem('nestora_master_items', JSON.stringify(items));
-    }, [items]);
 
-    useEffect(() => {
-        localStorage.setItem('nestora_inventory', JSON.stringify(inventory));
-    }, [inventory]);
-
-    useEffect(() => {
-        localStorage.setItem('nestora_shopping_sessions', JSON.stringify(shoppingSessions));
-    }, [shoppingSessions]);
 
     const handleAddItem = (e) => {
         e.preventDefault();
@@ -195,8 +181,6 @@ const Groceries = () => {
     };
 
     const completeShopping = () => {
-        // Log expense, update inventory, update price history
-        const newExpenses = JSON.parse(localStorage.getItem('nestora_expenses') || '[]');
         const shoppingExpense = {
             id: crypto.randomUUID(),
             title: `Grocery Shopping at ${shoppingSession.shopName}`,
@@ -204,7 +188,7 @@ const Groceries = () => {
             category: 'Groceries',
             date: new Date().toISOString()
         };
-        localStorage.setItem('nestora_expenses', JSON.stringify([shoppingExpense, ...newExpenses]));
+        setExpenses([shoppingExpense, ...expenses]);
 
         // Update inventory and prices
         let updatedInventory = [...inventory];
@@ -249,11 +233,15 @@ const Groceries = () => {
     return (
         <div className="page groceries-page">
 
-            <div className="segmented-control">
-                <button className={`segment ${activeTab === 'inventory' ? 'active' : ''}`} onClick={() => setActiveTab('inventory')}>Inventory</button>
-                <button className={`segment ${activeTab === 'master' ? 'active' : ''}`} onClick={() => setActiveTab('master')}>Master List</button>
-                <button className={`segment ${activeTab === 'shopping' ? 'active' : ''}`} onClick={() => setActiveTab('shopping')}>Shopping</button>
-            </div>
+            <SegmentedControl
+                options={[
+                    { value: 'inventory', label: 'Inventory' },
+                    { value: 'master', label: 'Master List' },
+                    { value: 'shopping', label: 'Shopping' }
+                ]}
+                value={activeTab}
+                onChange={setActiveTab}
+            />
 
             {activeTab === 'inventory' && (
                 <div className="inventory-list">
@@ -329,7 +317,7 @@ const Groceries = () => {
                                                     <ShoppingBag size={18} color="var(--primary)" />
                                                     <h4>{session.shopName || 'Unnamed Plan'}</h4>
                                                 </div>
-                                                <p>{session.items.length} items • {new Date(session.date).toLocaleDateString()}</p>
+                                                <p>{session.items.length} items • {formatDate(session.date)}</p>
                                                 <span className={`status-badge ${session.status}`}>{session.status === 'active' ? 'In Progress' : 'Planned'}</span>
                                             </div>
                                             <button className="btn-icon delete-btn" onClick={(e) => deletePlan(session.id, e)}>
@@ -468,40 +456,38 @@ const Groceries = () => {
                 </div>
             )}
 
-            {isModalOpen && (
-                <div className="modal-overlay" onClick={handleCancel}>
-                    <div className="bottom-sheet" onClick={e => e.stopPropagation()}>
-                        <div className="sheet-handle"></div>
-                        <h2>{currentItem ? 'Edit Item' : 'Add Master Item'}</h2>
-                        <form onSubmit={handleAddItem}>
-                            <div className="form-group">
-                                <label>Item Name</label>
-                                <input name="name" defaultValue={currentItem?.name} required placeholder="e.g. Milk" autoFocus />
-                            </div>
-                            <div className="form-group">
-                                <label>Category</label>
-                                <select name="category" defaultValue={currentItem?.category || GROCERY_CATEGORIES[0]}>
-                                    {GROCERY_CATEGORIES.map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Default Unit</label>
-                                <select name="unit" defaultValue={currentItem?.defaultUnit || 'pcs'}>
-                                    {UNIT_LIST.map(unit => (
-                                        <option key={unit} value={unit}>{unit}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="modal-actions">
-                                <button type="button" className="btn-secondary full-width" onClick={handleCancel}>Cancel</button>
-                                <button type="submit" className="btn-primary full-width">{currentItem ? 'Update' : 'Add Item'}</button>
-                            </div>
-                        </form>
+            <BottomSheet
+                isOpen={isModalOpen}
+                onClose={handleCancel}
+                title={currentItem ? 'Edit Item' : 'Add Master Item'}
+            >
+                <form onSubmit={handleAddItem}>
+                    <div className="form-group">
+                        <label>Item Name</label>
+                        <input name="name" defaultValue={currentItem?.name} required placeholder="e.g. Milk" autoFocus />
                     </div>
-                </div>
-            )}
+                    <div className="form-group">
+                        <label>Category</label>
+                        <select name="category" defaultValue={currentItem?.category || GROCERY_CATEGORIES[0]}>
+                            {GROCERY_CATEGORIES.map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Default Unit</label>
+                        <select name="unit" defaultValue={currentItem?.defaultUnit || 'pcs'}>
+                            {UNIT_LIST.map(unit => (
+                                <option key={unit} value={unit}>{unit}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="modal-actions">
+                        <button type="button" className="btn-secondary full-width" onClick={handleCancel}>Cancel</button>
+                        <button type="submit" className="btn-primary full-width">{currentItem ? 'Update' : 'Add Item'}</button>
+                    </div>
+                </form>
+            </BottomSheet>
         </div>
     );
 };

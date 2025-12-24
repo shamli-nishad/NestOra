@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus, CreditCard, Calendar, Check, AlertCircle, Trash2, ChevronRight, DollarSign } from 'lucide-react';
+import { formatDate } from '../../utils/dateUtils';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import BottomSheet from '../../components/UI/BottomSheet';
+import SegmentedControl from '../../components/UI/SegmentedControl';
 import './Bills.css';
 
 const Bills = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('pending'); // pending, paid
-    const [bills, setBills] = useState(() => {
-        const saved = localStorage.getItem('nestora_bills');
-        return saved ? JSON.parse(saved) : [];
-    });
+    const [bills, setBills] = useLocalStorage('nestora_bills', []);
+    const [expenses, setExpenses] = useLocalStorage('nestora_expenses', []);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
@@ -20,9 +22,7 @@ const Bills = () => {
         }
     }, [location]);
 
-    useEffect(() => {
-        localStorage.setItem('nestora_bills', JSON.stringify(bills));
-    }, [bills]);
+
 
     const handleAddBill = (e) => {
         e.preventDefault();
@@ -41,7 +41,6 @@ const Bills = () => {
 
     const markAsPaid = (id) => {
         const bill = bills.find(b => b.id === id);
-        const newExpenses = JSON.parse(localStorage.getItem('nestora_expenses') || '[]');
         const billExpense = {
             id: crypto.randomUUID(),
             title: `Bill Payment: ${bill.title}`,
@@ -49,7 +48,7 @@ const Bills = () => {
             category: 'Bills',
             date: new Date().toISOString()
         };
-        localStorage.setItem('nestora_expenses', JSON.stringify([billExpense, ...newExpenses]));
+        setExpenses([billExpense, ...expenses]);
 
         setBills(bills.map(b => b.id === id ? { ...b, status: 'paid' } : b));
         alert(`Bill "${bill.title}" marked as paid and logged as expense.`);
@@ -71,10 +70,14 @@ const Bills = () => {
     return (
         <div className="page bills-page">
 
-            <div className="segmented-control">
-                <button className={`segment ${activeTab === 'pending' ? 'active' : ''}`} onClick={() => setActiveTab('pending')}>Pending</button>
-                <button className={`segment ${activeTab === 'paid' ? 'active' : ''}`} onClick={() => setActiveTab('paid')}>Paid</button>
-            </div>
+            <SegmentedControl
+                options={[
+                    { value: 'pending', label: 'Pending' },
+                    { value: 'paid', label: 'Paid' }
+                ]}
+                value={activeTab}
+                onChange={setActiveTab}
+            />
 
             <div className="bill-list">
                 {filteredBills.length === 0 ? (
@@ -86,7 +89,7 @@ const Bills = () => {
                                 <h3>{bill.title}</h3>
                                 <div className="meta">
                                     <span className="amount">${bill.amount}</span>
-                                    <span className="due-date"><Calendar size={14} /> {new Date(bill.dueDate).toLocaleDateString()}</span>
+                                    <span className="due-date"><Calendar size={14} /> {formatDate(bill.dueDate)}</span>
                                 </div>
                             </div>
                             <div className="actions">
@@ -108,34 +111,32 @@ const Bills = () => {
                 <Plus size={24} color="white" />
             </button>
 
-            {isModalOpen && (
-                <div className="modal-overlay" onClick={handleCancel}>
-                    <div className="bottom-sheet" onClick={e => e.stopPropagation()}>
-                        <div className="sheet-handle"></div>
-                        <h2>Add New Bill</h2>
-                        <form onSubmit={handleAddBill}>
-                            <div className="form-group">
-                                <label>Bill Title</label>
-                                <input name="title" required placeholder="e.g. Electricity" autoFocus />
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Amount ($)</label>
-                                    <input type="number" name="amount" step="0.01" required />
-                                </div>
-                                <div className="form-group">
-                                    <label>Due Date</label>
-                                    <input type="date" name="dueDate" required />
-                                </div>
-                            </div>
-                            <div className="modal-actions">
-                                <button type="button" className="btn-secondary full-width" onClick={handleCancel}>Cancel</button>
-                                <button type="submit" className="btn-primary full-width">Add Bill</button>
-                            </div>
-                        </form>
+            <BottomSheet
+                isOpen={isModalOpen}
+                onClose={handleCancel}
+                title="Add New Bill"
+            >
+                <form onSubmit={handleAddBill}>
+                    <div className="form-group">
+                        <label>Bill Title</label>
+                        <input name="title" required placeholder="e.g. Electricity" autoFocus />
                     </div>
-                </div>
-            )}
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label>Amount ($)</label>
+                            <input type="number" name="amount" step="0.01" required />
+                        </div>
+                        <div className="form-group">
+                            <label>Due Date</label>
+                            <input type="date" name="dueDate" required />
+                        </div>
+                    </div>
+                    <div className="modal-actions">
+                        <button type="button" className="btn-secondary full-width" onClick={handleCancel}>Cancel</button>
+                        <button type="submit" className="btn-primary full-width">Add Bill</button>
+                    </div>
+                </form>
+            </BottomSheet>
         </div>
     );
 };

@@ -1,27 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Clock, User, Heart, MessageSquare, ChevronRight, Trash2 } from 'lucide-react';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import BottomSheet from '../../components/UI/BottomSheet';
+import SegmentedControl from '../../components/UI/SegmentedControl';
 import './Schedule.css';
 
 const Schedule = () => {
     const [activeTab, setActiveTab] = useState('planner'); // planner, contacts
-    const [events, setEvents] = useState(() => {
-        const saved = localStorage.getItem('nestora_events');
-        return saved ? JSON.parse(saved) : [];
-    });
-    const [contacts, setContacts] = useState(() => {
-        const saved = localStorage.getItem('nestora_contacts');
-        return saved ? JSON.parse(saved) : [];
-    });
+    const [events, setEvents] = useLocalStorage('nestora_events', []);
+    const [contacts, setContacts] = useLocalStorage('nestora_contacts', []);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState('event'); // event, contact
-
-    useEffect(() => {
-        localStorage.setItem('nestora_events', JSON.stringify(events));
-    }, [events]);
-
-    useEffect(() => {
-        localStorage.setItem('nestora_contacts', JSON.stringify(contacts));
-    }, [contacts]);
 
     const handleAddEvent = (e) => {
         e.preventDefault();
@@ -58,10 +47,14 @@ const Schedule = () => {
     return (
         <div className="page schedule-page">
 
-            <div className="segmented-control">
-                <button className={`segment ${activeTab === 'planner' ? 'active' : ''}`} onClick={() => setActiveTab('planner')}>Planner</button>
-                <button className={`segment ${activeTab === 'contacts' ? 'active' : ''}`} onClick={() => setActiveTab('contacts')}>Social</button>
-            </div>
+            <SegmentedControl
+                options={[
+                    { value: 'planner', label: 'Planner' },
+                    { value: 'contacts', label: 'Social' }
+                ]}
+                value={activeTab}
+                onChange={setActiveTab}
+            />
 
             {activeTab === 'planner' && (
                 <div className="planner-view">
@@ -123,58 +116,56 @@ const Schedule = () => {
                 </div>
             )}
 
-            {isModalOpen && (
-                <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-                    <div className="bottom-sheet" onClick={e => e.stopPropagation()}>
-                        <div className="sheet-handle"></div>
-                        <h2>{modalType === 'event' ? 'Add Event' : 'Add Contact'}</h2>
-                        {modalType === 'event' ? (
-                            <form onSubmit={handleAddEvent}>
-                                <div className="form-group">
-                                    <label>Event Title</label>
-                                    <input name="title" required placeholder="e.g. Doctor Appointment" autoFocus />
-                                </div>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>Time</label>
-                                        <input type="time" name="time" required />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Type</label>
-                                        <select name="type">
-                                            <option value="appointment">Appointment</option>
-                                            <option value="health">Health Check</option>
-                                            <option value="social">Social</option>
-                                            <option value="other">Other</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="modal-actions">
-                                    <button type="submit" className="btn-primary full-width">Add Event</button>
-                                </div>
-                            </form>
-                        ) : (
-                            <form onSubmit={handleAddContact}>
-                                <div className="form-group">
-                                    <label>Name</label>
-                                    <input name="name" required placeholder="e.g. Mom" autoFocus />
-                                </div>
-                                <div className="form-group">
-                                    <label>Last Contact</label>
-                                    <input type="date" name="lastContact" required />
-                                </div>
-                                <div className="form-group">
-                                    <label>Frequency (days)</label>
-                                    <input type="number" name="frequency" defaultValue={7} />
-                                </div>
-                                <div className="modal-actions">
-                                    <button type="submit" className="btn-primary full-width">Add Contact</button>
-                                </div>
-                            </form>
-                        )}
-                    </div>
-                </div>
-            )}
+            <BottomSheet
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={modalType === 'event' ? 'Add Event' : 'Add Contact'}
+            >
+                {modalType === 'event' ? (
+                    <form onSubmit={handleAddEvent}>
+                        <div className="form-group">
+                            <label>Event Title</label>
+                            <input name="title" required placeholder="e.g. Doctor Appointment" autoFocus />
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Time</label>
+                                <input type="time" name="time" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Type</label>
+                                <select name="type">
+                                    <option value="appointment">Appointment</option>
+                                    <option value="health">Health Check</option>
+                                    <option value="social">Social</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="modal-actions">
+                            <button type="submit" className="btn-primary full-width">Add Event</button>
+                        </div>
+                    </form>
+                ) : (
+                    <form onSubmit={handleAddContact}>
+                        <div className="form-group">
+                            <label>Name</label>
+                            <input name="name" required placeholder="e.g. Mom" autoFocus />
+                        </div>
+                        <div className="form-group">
+                            <label>Last Contact</label>
+                            <input type="date" name="lastContact" required />
+                        </div>
+                        <div className="form-group">
+                            <label>Frequency (days)</label>
+                            <input type="number" name="frequency" defaultValue={7} />
+                        </div>
+                        <div className="modal-actions">
+                            <button type="submit" className="btn-primary full-width">Add Contact</button>
+                        </div>
+                    </form>
+                )}
+            </BottomSheet>
         </div>
     );
 };
