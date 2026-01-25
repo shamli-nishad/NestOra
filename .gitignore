@@ -6,6 +6,8 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+*.backup
+
 #notes
 notes.md
 nestora_backup_*

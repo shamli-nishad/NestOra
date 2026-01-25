@@ -122,6 +122,10 @@
     background-color: #10b981;
 }
 
+.icon-box.meals {
+    background-color: #3b82f6;
+}
+
 .summary-card .info {
     display: flex;
     flex-direction: column;
@@ -251,4 +255,113 @@
     font-weight: 800;
     color: #dc2626;
     font-size: 0.9rem;
+}
+
+/* Today's Menu Styles */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.section-header h2 {
+    margin-bottom: 0 !important;
+}
+
+.btn-icon-text {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.todays-menu-wrapper {
+    margin-bottom: var(--space-md);
+}
+
+.todays-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.menu-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-md) var(--space-xs);
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    text-align: center;
+}
+
+.menu-card:active {
+    transform: scale(0.98);
+}
+
+.menu-icon {
+    width: 32px;
+    height: 32px;
+    background-color: #f1f5f9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+}
+
+.menu-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.menu-info h3 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-main);
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.2;
+}
+
+.menu-info .meal-type {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.menu-empty-state {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: var(--space-md) var(--space-lg);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px dashed var(--border);
+    background-color: transparent;
+    margin: 0 var(--space-lg);
+}
+
+.menu-empty-state:active {
+    transform: scale(0.98);
+}
+
+.menu-empty-state p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0;
 }

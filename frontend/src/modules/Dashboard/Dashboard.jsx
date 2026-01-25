@@ -12,7 +12,9 @@ import {
     CookingPot,
     Clock,
     CheckCircle,
-    Circle
+    Circle,
+    Calendar,
+    MapPin
 } from 'lucide-react';
 import { getLocalDateTimeForInput, formatDate } from '../../utils/dateUtils';
 import { useTasks } from '../../hooks/useTasks';
@@ -39,6 +41,7 @@ const Dashboard = () => {
     const [recipes] = useLocalStorage('nestora_recipes', []);
     const [cookingHistory, setCookingHistory] = useLocalStorage('nestora_cooking_history', []);
     const [shoppingSessions] = useLocalStorage('nestora_shopping_sessions', []);
+    const [mealPlans] = useLocalStorage('nestora_meal_plans', []);
 
     const { applyRetention } = useRetentionPolicy();
 
@@ -73,7 +76,7 @@ const Dashboard = () => {
             monthlySpend: monthlySpendSum,
             pendingShopping: pendingShoppingCount
         });
-    }, [tasks, inventory, expenses, shoppingSessions]);
+    }, [tasks, inventory, expenses, shoppingSessions, mealPlans]);
 
     // handletoggleTask replaced by toggleTask from hook
 
@@ -94,6 +97,9 @@ const Dashboard = () => {
         }
         return 0;
     });
+
+    const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    const todaysMeals = mealPlans.filter(p => p.date === todayStr);
 
     const handleLogCook = (e) => {
         e.preventDefault();
@@ -200,6 +206,39 @@ const Dashboard = () => {
                         <Utensils size={20} />
                         <span>Add Recipe</span>
                     </button>
+                </div>
+            </div>
+
+            {/* Section 2.5: Today's Menu */}
+            <div className="dashboard-section menu-section">
+                <div className="section-header">
+                    <h2>Today's Menu</h2>
+                    <button className="btn-icon-text" onClick={() => navigate('/meals', { state: { activeTab: 'plan' } })}>
+                        <Plus size={16} /> Plan
+                    </button>
+                </div>
+
+                <div className="todays-menu-wrapper">
+                    {todaysMeals.length > 0 ? (
+                        <div className="todays-menu-grid">
+                            {todaysMeals.map(meal => (
+                                <div key={meal.id} className="menu-card card" onClick={() => navigate('/meals')}>
+                                    <div className="menu-icon">
+                                        {meal.recipeId ? <Utensils size={16} /> : <MapPin size={16} />}
+                                    </div>
+                                    <div className="menu-info">
+                                        <span className="meal-type">{meal.mealType}</span>
+                                        <h3>{meal.title}</h3>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="menu-empty-state card" onClick={() => navigate('/meals', { state: { activeTab: 'plan' } })}>
+                            <Calendar size={20} color="#94a3b8" />
+                            <p>No meals planned for today. Click to plan!</p>
+                        </div>
+                    )}
                 </div>
             </div>
 

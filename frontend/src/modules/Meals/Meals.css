@@ -105,6 +105,7 @@
 }
 
 .btn-secondary {
+    padding: 10px 166px;
     padding: 10px 16px;
     border-radius: var(--radius-md);
     background-color: #f1f5f9;
@@ -321,4 +322,95 @@ textarea {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Plan Styles */
+.plan-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.plan-day-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.plan-date-header {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--primary);
+    padding: 0 var(--space-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.plan-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.plan-item {
+    padding: var(--space-md) var(--space-lg);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.plan-item:active {
+    transform: scale(0.98);
+    background-color: #f8fafc;
+}
+
+.plan-item-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.plan-item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.plan-item-info h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-main);
+}
+
+.meal-type-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+}
+
+.plan-notes {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin: 0;
+}
+
+.plan-item-icon {
+    width: 36px;
+    height: 36px;
+    background-color: #f1f5f9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-help {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
 }

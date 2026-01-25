@@ -62,6 +62,8 @@ export const UNIT_LIST = [
 export const MEAL_TYPES = [
     'Breakfast',
     'Lunch',
+    'School lunch',
+    'Office lunch',
     'Dinner',
     'Snack',
     'Appetizer',
