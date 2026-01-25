@@ -26,6 +26,8 @@ const Meals = () => {
     const [recipeToCook, setRecipeToCook] = useState(null);
     const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
     const [currentPlanItem, setCurrentPlanItem] = useState(null);
+    const [viewDate, setViewDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
     useEffect(() => {
         if (currentRecipe) {
@@ -188,6 +190,26 @@ const Meals = () => {
         return acc;
     }, {});
 
+    // Calendar Helpers
+    const getDaysInMonth = (date) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const days = new Date(year, month + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay();
+        return { days, firstDay };
+    };
+
+    const navigateMonth = (direction) => {
+        const newDate = new Date(viewDate);
+        newDate.setMonth(newDate.getMonth() + direction);
+        setViewDate(newDate);
+    };
+
+    const { days, firstDay } = getDaysInMonth(viewDate);
+    const calendarDays = [];
+    for (let i = 0; i < firstDay; i++) calendarDays.push(null);
+    for (let i = 1; i <= days; i++) calendarDays.push(i);
+
 
     const handleCancel = () => {
         setIsModalOpen(false);
@@ -211,46 +233,75 @@ const Meals = () => {
             />
 
             {activeTab === 'plan' && (
-                <div className="plan-list">
-                    <div className="list-header">
-                        <h3>Meal Plan</h3>
-                        <button className="btn-primary" onClick={() => setIsPlanModalOpen(true)}>
-                            <Plus size={18} /> Add Plan
-                        </button>
+                <div className="plan-calendar-view">
+                    <div className="calendar-container card">
+                        <div className="calendar-header">
+                            <button className="btn-icon" onClick={() => navigateMonth(-1)}><ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} /></button>
+                            <h3>{viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
+                            <button className="btn-icon" onClick={() => navigateMonth(1)}><ChevronRight size={20} /></button>
+                        </div>
+                        <div className="calendar-grid">
+                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d} className="weekday">{d}</div>)}
+                            {calendarDays.map((day, idx) => {
+                                if (!day) return <div key={`empty-${idx}`} className="calendar-day empty"></div>;
+
+                                const dateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                const dayPlans = groupedPlans[dateStr] || [];
+                                const hasPlans = dayPlans.length > 0;
+                                const isSelected = selectedDate === dateStr;
+                                const isToday = new Date().toISOString().split('T')[0] === dateStr;
+
+                                return (
+                                    <div
+                                        key={day}
+                                        className={`calendar-day ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''} ${hasPlans ? 'has-plans' : ''}`}
+                                        onClick={() => setSelectedDate(dateStr)}
+                                    >
+                                        <span>{day}</span>
+                                        {hasPlans && <div className="plan-count">{dayPlans.length}</div>}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
 
-                    {Object.keys(groupedPlans).length === 0 ? (
-                        <div className="empty-state">
-                            <Calendar size={48} color="#cbd5e1" />
-                            <p>No meals planned yet.</p>
+                    <div className="day-plans-section">
+                        <div className="list-header">
+                            <h3>{formatDate(selectedDate)}</h3>
+                            <button className="btn-primary" onClick={() => setIsPlanModalOpen(true)}>
+                                <Plus size={18} /> Add Plan
+                            </button>
                         </div>
-                    ) : (
-                        Object.entries(groupedPlans).map(([date, plans]) => (
-                            <div key={date} className="plan-day-group">
-                                <h4 className="plan-date-header">{formatDate(date)}</h4>
-                                <div className="plan-items">
-                                    {plans.map(plan => (
-                                        <div
-                                            key={plan.id}
-                                            className="plan-item card"
-                                            onClick={() => { setCurrentPlanItem(plan); setIsPlanModalOpen(true); }}
-                                        >
-                                            <div className="plan-item-main">
-                                                <div className="plan-item-info">
-                                                    <span className="meal-type-badge">{plan.mealType}</span>
-                                                    <h3>{plan.title}</h3>
-                                                    {plan.notes && <p className="plan-notes">{plan.notes}</p>}
-                                                </div>
-                                                <div className="plan-item-icon">
-                                                    {plan.recipeId ? <Utensils size={18} color="#3b82f6" /> : <MapPin size={18} color="#f59e0b" />}
-                                                </div>
+
+                        {!groupedPlans[selectedDate] || groupedPlans[selectedDate].length === 0 ? (
+                            <div className="empty-state">
+                                <Calendar size={48} color="#cbd5e1" />
+                                <p>No meals planned for this day.</p>
+                            </div>
+                        ) : (
+                            <div className="plan-items">
+                                {groupedPlans[selectedDate].map(plan => (
+                                    <div
+                                        key={plan.id}
+                                        className="plan-item card"
+                                        onClick={() => { setCurrentPlanItem(plan); setIsPlanModalOpen(true); }}
+                                    >
+                                        <div className="plan-item-main">
+                                            <div className="plan-item-info">
+                                                <span className="meal-type-badge">{plan.mealType}</span>
+                                                <h3>{plan.title}</h3>
+                                                {plan.notes && <p className="plan-notes">{plan.notes}</p>}
+                                            </div>
+                                            <div className="plan-item-icon">
+                                                {plan.recipeId ? <Utensils size={18} color="#3b82f6" /> : <MapPin size={18} color="#f59e0b" />}
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))
-                    )}
+                        )}
+                    </div>
+
                     <button className="fab-add" onClick={() => setIsPlanModalOpen(true)}>
                         <Plus size={24} color="white" />
                     </button>
@@ -465,7 +516,7 @@ const Meals = () => {
                         <input
                             type="date"
                             name="date"
-                            defaultValue={currentPlanItem?.date || getLocalDateTimeForInput().split('T')[0]}
+                            defaultValue={currentPlanItem?.date || selectedDate}
                             required
                         />
                     </div>
