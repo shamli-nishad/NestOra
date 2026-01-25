@@ -8,6 +8,13 @@ import BottomSheet from '../../components/UI/BottomSheet';
 import SegmentedControl from '../../components/UI/SegmentedControl';
 import './Groceries.css';
 
+const generateUUID = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
 const Groceries = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -18,6 +25,20 @@ const Groceries = () => {
     const [shoppingSession, setShoppingSession] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState(null);
+    const [expandedCategories, setExpandedCategories] = useState({});
+    const [filterCategory, setFilterCategory] = useState('All');
+    const [statusFilter, setStatusFilter] = useState('all'); // all, low
+
+    const toggleCategory = (cat) => {
+        setExpandedCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
+    };
+
+    const filteredInventory = inventory.filter(item => {
+        const matchesCategory = filterCategory === 'All' || item.category === filterCategory;
+        const threshold = item.lowStockThreshold !== undefined ? item.lowStockThreshold : 0;
+        const matchesStatus = statusFilter === 'all' || (statusFilter === 'low' && item.currentQuantity <= threshold);
+        return matchesCategory && matchesStatus;
+    });
 
     // Migration logic
     useEffect(() => {
@@ -74,11 +95,12 @@ const Groceries = () => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const newItem = {
-            id: currentItem ? currentItem.id : crypto.randomUUID(),
+            id: currentItem ? currentItem.id : generateUUID(),
             name: formData.get('name'),
             category: formData.get('category'),
             defaultUnit: formData.get('unit'),
             currentQuantity: currentItem ? currentItem.currentQuantity : 0,
+            lowStockThreshold: parseInt(formData.get('threshold')) || 0,
             lastPrice: currentItem ? currentItem.lastPrice : 0,
             priceHistory: currentItem ? currentItem.priceHistory : [],
         };
@@ -109,7 +131,7 @@ const Groceries = () => {
 
     const startShopping = () => {
         const newSession = {
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             date: new Date().toISOString(),
             status: 'planning',
             shopName: '',
@@ -120,25 +142,34 @@ const Groceries = () => {
     };
 
     const savePlan = () => {
+        if (!shoppingSession) {
+            console.warn("No active shopping session to save.");
+            return;
+        }
+
         if (!shoppingSession.shopName) {
             alert("Please select or enter a shop name.");
             return;
         }
-        const existingIndex = shoppingSessions.findIndex(s => s.id === shoppingSession.id);
-        if (existingIndex !== -1) {
-            const updated = [...shoppingSessions];
-            updated[existingIndex] = shoppingSession;
-            setShoppingSessions(updated);
-        } else {
-            setShoppingSessions([...shoppingSessions, shoppingSession]);
-        }
+
+        setShoppingSessions(prev => {
+            const existingIndex = prev.findIndex(s => s.id === shoppingSession.id);
+            if (existingIndex !== -1) {
+                const updated = [...prev];
+                updated[existingIndex] = shoppingSession;
+                return updated;
+            }
+            return [...prev, shoppingSession];
+        });
+
         setShoppingSession(null);
+        alert("Shopping plan saved!");
     };
 
     const deletePlan = (id, e) => {
         e.stopPropagation();
         if (window.confirm("Are you sure you want to delete this shopping plan?")) {
-            setShoppingSessions(shoppingSessions.filter(s => s.id !== id));
+            setShoppingSessions(prev => prev.filter(s => s.id !== id));
         }
     };
 
@@ -165,6 +196,8 @@ const Groceries = () => {
     };
 
     const startExecution = () => {
+        if (!shoppingSession) return;
+
         if (!shoppingSession.shopName) {
             alert("Please select or enter a shop name.");
             return;
@@ -173,18 +206,20 @@ const Groceries = () => {
             alert("Please select at least one item to plan.");
             return;
         }
-        const updatedSession = { ...shoppingSession, status: 'active' };
-        setShoppingSession(updatedSession);
 
-        // Also update in the list if it exists
-        const existingIndex = shoppingSessions.findIndex(s => s.id === shoppingSession.id);
-        if (existingIndex !== -1) {
-            const updated = [...shoppingSessions];
-            updated[existingIndex] = updatedSession;
-            setShoppingSessions(updated);
-        } else {
-            setShoppingSessions([...shoppingSessions, updatedSession]);
-        }
+        const updatedSession = { ...shoppingSession, status: 'active' };
+
+        setShoppingSessions(prev => {
+            const existingIndex = prev.findIndex(s => s.id === updatedSession.id);
+            if (existingIndex !== -1) {
+                const updated = [...prev];
+                updated[existingIndex] = updatedSession;
+                return updated;
+            }
+            return [...prev, updatedSession];
+        });
+
+        setShoppingSession(updatedSession);
     };
 
     const addItemOnTheGo = (item) => {
@@ -213,34 +248,41 @@ const Groceries = () => {
     };
 
     const completeShopping = () => {
+        if (!shoppingSession) return;
+
         const shoppingExpense = {
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             title: `Grocery Shopping at ${shoppingSession.shopName}`,
-            amount: shoppingSession.items.reduce((acc, curr) => acc + (curr.quantity * curr.price), 0),
+            amount: shoppingSession.items.reduce((acc, curr) => acc + (curr.quantity * (curr.price || 0)), 0),
             category: 'Groceries',
             date: new Date().toISOString()
         };
-        setExpenses([shoppingExpense, ...expenses]);
+
+        setExpenses(prev => [shoppingExpense, ...prev]);
 
         // Update inventory and prices
-        let updatedInventory = [...inventory];
-
-        shoppingSession.items.forEach(sItem => {
-            const itemIndex = updatedInventory.findIndex(i => i.id === sItem.itemId);
-            if (itemIndex !== -1) {
-                // Update quantity
-                updatedInventory[itemIndex].currentQuantity += sItem.quantity;
-                // Update price info
-                updatedInventory[itemIndex].lastPrice = sItem.price;
-                if (!updatedInventory[itemIndex].priceHistory) updatedInventory[itemIndex].priceHistory = [];
-                updatedInventory[itemIndex].priceHistory.push({ date: new Date().toISOString(), price: sItem.price });
-            }
+        setInventory(prevInv => {
+            const updatedInventory = [...prevInv];
+            shoppingSession.items.forEach(sItem => {
+                const itemIndex = updatedInventory.findIndex(i => i.id === sItem.itemId);
+                if (itemIndex !== -1) {
+                    // Update quantity
+                    updatedInventory[itemIndex].currentQuantity = (updatedInventory[itemIndex].currentQuantity || 0) + sItem.quantity;
+                    // Update price info
+                    updatedInventory[itemIndex].lastPrice = sItem.price;
+                    if (!updatedInventory[itemIndex].priceHistory) updatedInventory[itemIndex].priceHistory = [];
+                    updatedInventory[itemIndex].priceHistory.push({
+                        date: new Date().toISOString(),
+                        price: sItem.price
+                    });
+                }
+            });
+            return updatedInventory;
         });
 
         // Remove from shoppingSessions
-        setShoppingSessions(shoppingSessions.filter(s => s.id !== shoppingSession.id));
+        setShoppingSessions(prev => prev.filter(s => s.id !== shoppingSession.id));
 
-        setInventory(updatedInventory);
         setShoppingSession(null);
         setActiveTab('inventory');
         alert("Shopping completed! Inventory and expenses updated.");
@@ -272,14 +314,47 @@ const Groceries = () => {
                         <h3>Inventory Catalog</h3>
                         <button className="btn-primary" onClick={() => setIsModalOpen(true)}><Plus size={18} /> Add Item</button>
                     </div>
-                    {inventory.length === 0 ? (
-                        <div className="empty-state"><Package size={48} color="#cbd5e1" /><p>Your inventory is empty.</p></div>
+
+                    <div className="filter-bar card">
+                        <div className="filter-group">
+                            <label>Category</label>
+                            <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
+                                <option value="All">All Categories</option>
+                                {GROCERY_CATEGORIES.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="filter-group">
+                            <label>Status</label>
+                            <div className="status-toggles">
+                                <button
+                                    className={`status-btn ${statusFilter === 'all' ? 'active' : ''}`}
+                                    onClick={() => setStatusFilter('all')}
+                                >
+                                    All
+                                </button>
+                                <button
+                                    className={`status-btn ${statusFilter === 'low' ? 'active' : ''}`}
+                                    onClick={() => setStatusFilter('low')}
+                                >
+                                    Low Stock
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {filteredInventory.length === 0 ? (
+                        <div className="empty-state">
+                            <Package size={48} color="#cbd5e1" />
+                            <p>No items match your filters.</p>
+                        </div>
                     ) : (
-                        inventory.map(item => (
+                        filteredInventory.map(item => (
                             <div key={item.id} className="inventory-card card">
                                 <div className="info" onClick={() => { setCurrentItem(item); setIsModalOpen(true); }}>
                                     <h3>{item.name}</h3>
-                                    <p>{item.category} • {item.currentQuantity} {item.defaultUnit} • ${item.lastPrice}</p>
+                                    <p>{item.category} • {item.currentQuantity} {item.defaultUnit} • ${item.lastPrice} {item.currentQuantity <= (item.lowStockThreshold || 0) && <span className="low-stock-alert">Low!</span>}</p>
                                 </div>
                                 <div className="card-controls">
                                     <div className="qty-controls">
@@ -354,18 +429,39 @@ const Groceries = () => {
                                 </select>
                             </div>
                             <div className="item-selection">
-                                <label>Select Items</label>
-                                <div className="selection-list">
-                                    {inventory.map(item => (
-                                        <div
-                                            key={item.id}
-                                            className={`selection-item ${shoppingSession.items.find(i => i.itemId === item.id) ? 'selected' : ''}`}
-                                            onClick={() => togglePlannedItem(item)}
-                                        >
-                                            <span>{item.name}</span>
-                                            {shoppingSession.items.find(i => i.itemId === item.id) ? <Check size={16} color="#10b981" /> : <Plus size={16} color="#cbd5e1" />}
-                                        </div>
-                                    ))}
+                                <label>Browse Catalog</label>
+                                <div className="categorized-selection">
+                                    {GROCERY_CATEGORIES.map(cat => {
+                                        const catItems = inventory.filter(i => i.category === cat);
+                                        if (catItems.length === 0) return null;
+                                        const isExpanded = expandedCategories[cat];
+
+                                        return (
+                                            <div key={cat} className={`category-group ${isExpanded ? 'expanded' : ''}`}>
+                                                <div className="category-header" onClick={() => toggleCategory(cat)}>
+                                                    <span>{cat}</span>
+                                                    <ChevronRight size={16} className="arrow" />
+                                                </div>
+                                                {isExpanded && (
+                                                    <div className="category-items">
+                                                        {catItems.map(item => (
+                                                            <div
+                                                                key={item.id}
+                                                                className={`selection-item ${shoppingSession.items.find(i => i.itemId === item.id) ? 'selected' : ''}`}
+                                                                onClick={() => togglePlannedItem(item)}
+                                                            >
+                                                                <div className="item-info">
+                                                                    <span className="name">{item.name}</span>
+                                                                    <span className="stock">Stock: {item.currentQuantity}</span>
+                                                                </div>
+                                                                {shoppingSession.items.find(i => i.itemId === item.id) ? <Check size={16} color="#10b981" /> : <Plus size={16} color="#cbd5e1" />}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                             <div className="modal-actions">
@@ -481,13 +577,19 @@ const Groceries = () => {
                             ))}
                         </select>
                     </div>
-                    <div className="form-group">
-                        <label>Default Unit</label>
-                        <select name="unit" defaultValue={currentItem?.defaultUnit || 'pcs'}>
-                            {UNIT_LIST.map(unit => (
-                                <option key={unit} value={unit}>{unit}</option>
-                            ))}
-                        </select>
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label>Default Unit</label>
+                            <select name="unit" defaultValue={currentItem?.defaultUnit || 'pcs'}>
+                                {UNIT_LIST.map(unit => (
+                                    <option key={unit} value={unit}>{unit}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Low Stock Alert At</label>
+                            <input type="number" name="threshold" defaultValue={currentItem?.lowStockThreshold || 0} min="0" />
+                        </div>
                     </div>
                     <div className="modal-actions">
                         <button type="button" className="btn-secondary full-width" onClick={handleCancel}>Cancel</button>

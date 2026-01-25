@@ -212,42 +212,98 @@
     margin-top: 4px;
 }
 
-.selection-list {
+.categorized-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.category-group {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background-color: white;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: #f8fafc;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.category-header .arrow {
+    transition: transform 0.2s ease;
+    color: var(--text-muted);
+}
+
+.category-group.expanded .category-header .arrow {
+    transform: rotate(90deg);
+}
+
+.category-items {
+    padding: 8px;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: 8px;
-    max-height: 300px;
-    overflow-y: auto;
-    padding-right: 4px;
+    background-color: white;
 }
 
 .selection-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
     background-color: #f8fafc;
-    border-radius: var(--radius-md);
-    border: 1px solid transparent;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .selection-item.selected {
     background-color: #f0fdf4;
-    border-color: #10b981;
+    border: 1px solid #10b981;
 }
 
-.selection-item span {
+.selection-item .item-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.selection-item .name {
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 600;
+}
+
+.selection-item .stock {
+    font-size: 0.75rem;
+    color: var(--text-muted);
 }
 
 .item-meta {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.low-stock-alert {
+    background-color: #fee2e2;
+    color: #ef4444;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    margin-left: 6px;
+    display: inline-block;
 }
 
 .on-the-go-badge {
@@ -258,6 +314,61 @@
     border-radius: 4px;
     font-weight: 700;
     text-transform: uppercase;
+}
+
+.filter-bar {
+    display: flex;
+    gap: var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
+    background-color: white;
+    margin-bottom: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filter-group label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.filter-group select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background-color: #f8fafc;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-toggles {
+    display: flex;
+    gap: 6px;
+}
+
+.status-btn {
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: var(--radius-md);
+    background-color: #f1f5f9;
+    color: #475569;
+    transition: all 0.2s ease;
+}
+
+.status-btn.active {
+    background-color: var(--primary);
+    color: white;
 }
 
 .add-on-the-go {
