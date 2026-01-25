@@ -90,7 +90,7 @@ This section details the current state of the application as of Phase 1.
    npm run dev
    ```
 
-5. Open your browser and navigate to `http://localhost:5173`.
+5. Open your browser and navigate to `http://localhost:3000`.
 
 ## 📂 Project Structure
 
