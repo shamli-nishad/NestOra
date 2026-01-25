@@ -63,7 +63,7 @@ const Dashboard = () => {
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
         const pendingTasksCount = tasks.filter(c => !c.completed && isTaskDue(c)).length;
-        const lowInventoryCount = inventory.filter(i => i.quantity < 2).length;
+        const lowInventoryCount = inventory.filter(i => i.currentQuantity < 2).length;
         const monthlySpendSum = expenses
             .filter(e => e.date && new Date(e.date) >= firstDayOfMonth)
             .reduce((acc, curr) => acc + (curr.amount || 0), 0);
@@ -122,22 +122,8 @@ const Dashboard = () => {
         const updatedHistory = [historyEntry, ...cookingHistory];
         setCookingHistory(updatedHistory);
 
-        // Reduce inventory
-        let updatedInventory = [...inventory];
-        recipe.ingredients?.forEach(ing => {
-            const invIndex = updatedInventory.findIndex(i => i.itemId === ing.itemId);
-            if (invIndex !== -1) {
-                updatedInventory[invIndex] = {
-                    ...updatedInventory[invIndex],
-                    quantity: Math.max(0, updatedInventory[invIndex].quantity - 1)
-                };
-            }
-        });
-        const finalInventory = updatedInventory.filter(i => i.quantity > 0);
-        setInventory(finalInventory);
-
         setIsCookModalOpen(false);
-        alert(`Logged "${recipe.title}"! Inventory updated.`);
+        alert(`Logged "${recipe.title}"!`);
     };
 
     return (

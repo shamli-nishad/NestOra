@@ -11,8 +11,7 @@ import './Groceries.css';
 const Groceries = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('inventory'); // inventory, master, shopping
-    const [items, setItems] = useLocalStorage('nestora_master_items', []);
+    const [activeTab, setActiveTab] = useState('inventory'); // inventory, shopping
     const [inventory, setInventory] = useLocalStorage('nestora_inventory', []);
     const [shoppingSessions, setShoppingSessions] = useLocalStorage('nestora_shopping_sessions', []);
     const [expenses, setExpenses] = useLocalStorage('nestora_expenses', []);
@@ -20,9 +19,41 @@ const Groceries = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState(null);
 
+    // Migration logic
+    useEffect(() => {
+        const oldMaster = localStorage.getItem('nestora_master_items');
+        const oldInventory = localStorage.getItem('nestora_inventory');
+
+        // If master exists and hasn't been merged (checking for currentQuantity field)
+        if (oldMaster) {
+            try {
+                const masterItems = JSON.parse(oldMaster);
+                const invItems = oldInventory ? JSON.parse(oldInventory) : [];
+
+                // Check if already migrated
+                if (masterItems.length > 0 && masterItems[0].currentQuantity === undefined) {
+                    console.log("Migrating master list and inventory...");
+                    const merged = masterItems.map(m => {
+                        const inv = invItems.find(i => i.itemId === m.id);
+                        return {
+                            ...m,
+                            currentQuantity: inv ? inv.quantity : 0,
+                            priceHistory: m.priceHistory || []
+                        };
+                    });
+                    setInventory(merged);
+                    // Clear old master list key after migration
+                    localStorage.removeItem('nestora_master_items');
+                }
+            } catch (e) {
+                console.error("Migration failed", e);
+            }
+        }
+    }, []);
+
     useEffect(() => {
         if (location.state?.openAddModal) {
-            setActiveTab('master'); // Switch to master list where Add button is
+            setActiveTab('inventory');
             setIsModalOpen(true);
             window.history.replaceState({}, document.title);
         }
@@ -47,38 +78,33 @@ const Groceries = () => {
             name: formData.get('name'),
             category: formData.get('category'),
             defaultUnit: formData.get('unit'),
+            currentQuantity: currentItem ? currentItem.currentQuantity : 0,
             lastPrice: currentItem ? currentItem.lastPrice : 0,
             priceHistory: currentItem ? currentItem.priceHistory : [],
         };
 
         if (currentItem) {
-            setItems(items.map(i => i.id === currentItem.id ? newItem : i));
+            setInventory(inventory.map(i => i.id === currentItem.id ? newItem : i));
         } else {
-            setItems([...items, newItem]);
+            setInventory([...inventory, newItem]);
         }
         setIsModalOpen(false);
         setCurrentItem(null);
     };
 
     const handleDeleteItem = (id) => {
-        if (window.confirm("Delete this item from Master List?")) {
-            setItems(items.filter(i => i.id !== id));
+        if (window.confirm("Delete this item from Inventory?")) {
+            setInventory(inventory.filter(i => i.id !== id));
         }
     };
 
-    const updateInventory = (itemId, change) => {
-        const existing = inventory.find(i => i.itemId === itemId);
-        if (existing) {
-            const newQty = Math.max(0, existing.quantity + change);
-            if (newQty === 0) {
-                setInventory(inventory.filter(i => i.itemId !== itemId));
-            } else {
-                setInventory(inventory.map(i => i.itemId === itemId ? { ...i, quantity: newQty } : i));
+    const updateQuantity = (itemId, change) => {
+        setInventory(inventory.map(i => {
+            if (i.id === itemId) {
+                return { ...i, currentQuantity: Math.max(0, i.currentQuantity + change) };
             }
-        } else if (change > 0) {
-            const item = items.find(i => i.id === itemId);
-            setInventory([...inventory, { itemId, name: item.name, quantity: change, unit: item.defaultUnit }]);
-        }
+            return i;
+        }));
     };
 
     const startShopping = () => {
@@ -198,23 +224,16 @@ const Groceries = () => {
 
         // Update inventory and prices
         let updatedInventory = [...inventory];
-        let updatedItems = [...items];
 
         shoppingSession.items.forEach(sItem => {
-            // Inventory
-            const invIndex = updatedInventory.findIndex(i => i.itemId === sItem.itemId);
-            if (invIndex !== -1) {
-                updatedInventory[invIndex].quantity += sItem.quantity;
-            } else {
-                updatedInventory.push({ itemId: sItem.itemId, name: sItem.name, quantity: sItem.quantity, unit: sItem.unit });
-            }
-
-            // Price History
-            const itemIndex = updatedItems.findIndex(i => i.id === sItem.itemId);
+            const itemIndex = updatedInventory.findIndex(i => i.id === sItem.itemId);
             if (itemIndex !== -1) {
-                updatedItems[itemIndex].lastPrice = sItem.price;
-                if (!updatedItems[itemIndex].priceHistory) updatedItems[itemIndex].priceHistory = [];
-                updatedItems[itemIndex].priceHistory.push({ date: new Date().toISOString(), price: sItem.price });
+                // Update quantity
+                updatedInventory[itemIndex].currentQuantity += sItem.quantity;
+                // Update price info
+                updatedInventory[itemIndex].lastPrice = sItem.price;
+                if (!updatedInventory[itemIndex].priceHistory) updatedInventory[itemIndex].priceHistory = [];
+                updatedInventory[itemIndex].priceHistory.push({ date: new Date().toISOString(), price: sItem.price });
             }
         });
 
@@ -222,7 +241,6 @@ const Groceries = () => {
         setShoppingSessions(shoppingSessions.filter(s => s.id !== shoppingSession.id));
 
         setInventory(updatedInventory);
-        setItems(updatedItems);
         setShoppingSession(null);
         setActiveTab('inventory');
         alert("Shopping completed! Inventory and expenses updated.");
@@ -242,7 +260,6 @@ const Groceries = () => {
             <SegmentedControl
                 options={[
                     { value: 'inventory', label: 'Inventory' },
-                    { value: 'master', label: 'Master List' },
                     { value: 'shopping', label: 'Shopping' }
                 ]}
                 value={activeTab}
@@ -251,48 +268,25 @@ const Groceries = () => {
 
             {activeTab === 'inventory' && (
                 <div className="inventory-list">
+                    <div className="list-header">
+                        <h3>Inventory Catalog</h3>
+                        <button className="btn-primary" onClick={() => setIsModalOpen(true)}><Plus size={18} /> Add Item</button>
+                    </div>
                     {inventory.length === 0 ? (
                         <div className="empty-state"><Package size={48} color="#cbd5e1" /><p>Your inventory is empty.</p></div>
                     ) : (
                         inventory.map(item => (
-                            <div key={item.itemId} className="inventory-card card">
-                                <div className="info">
+                            <div key={item.id} className="inventory-card card">
+                                <div className="info" onClick={() => { setCurrentItem(item); setIsModalOpen(true); }}>
                                     <h3>{item.name}</h3>
-                                    <p>{item.quantity} {item.unit}</p>
+                                    <p>{item.category} • {item.currentQuantity} {item.defaultUnit} • ${item.lastPrice}</p>
                                 </div>
-                                <div className="qty-controls">
-                                    <button onClick={() => updateInventory(item.itemId, -1)}>-</button>
-                                    <span>{item.quantity}</span>
-                                    <button onClick={() => updateInventory(item.itemId, 1)}>+</button>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            )}
-
-            {activeTab === 'master' && (
-                <div className="master-list">
-                    <div className="list-header">
-                        <h3>Master List</h3>
-                        <button className="btn-primary" onClick={() => setIsModalOpen(true)}><Plus size={18} /> Add Item</button>
-                    </div>
-                    {items.length === 0 ? (
-                        <div className="empty-state">
-                            <Package size={48} color="#cbd5e1" />
-                            <p>Your master list is empty.</p>
-                        </div>
-                    ) : (
-                        items.map(item => (
-                            <div key={item.id} className="item-card card">
-                                <div className="info">
-                                    <h3>{item.name}</h3>
-                                    <p>{item.category} • Last: ${item.lastPrice}</p>
-                                </div>
-                                <div className="card-actions">
-                                    <button className="btn-icon" onClick={() => { setCurrentItem(item); setIsModalOpen(true); }}>
-                                        <Edit2 size={18} color="#94a3b8" />
-                                    </button>
+                                <div className="card-controls">
+                                    <div className="qty-controls">
+                                        <button onClick={() => updateQuantity(item.id, -1)}>-</button>
+                                        <span>{item.currentQuantity}</span>
+                                        <button onClick={() => updateQuantity(item.id, 1)}>+</button>
+                                    </div>
                                     <button className="btn-icon" onClick={() => handleDeleteItem(item.id)}>
                                         <Trash2 size={18} color="#ef4444" />
                                     </button>
@@ -305,6 +299,8 @@ const Groceries = () => {
                     </button>
                 </div>
             )}
+
+
 
             {activeTab === 'shopping' && (
                 <div className="shopping-session">
@@ -360,7 +356,7 @@ const Groceries = () => {
                             <div className="item-selection">
                                 <label>Select Items</label>
                                 <div className="selection-list">
-                                    {items.map(item => (
+                                    {inventory.map(item => (
                                         <div
                                             key={item.id}
                                             className={`selection-item ${shoppingSession.items.find(i => i.itemId === item.id) ? 'selected' : ''}`}
@@ -444,14 +440,14 @@ const Groceries = () => {
                                 <label>Add item on the go</label>
                                 <select
                                     onChange={(e) => {
-                                        const item = items.find(i => i.id === e.target.value);
+                                        const item = inventory.find(i => i.id === e.target.value);
                                         if (item) addItemOnTheGo(item);
                                         e.target.value = "";
                                     }}
                                     className="on-the-go-select"
                                 >
                                     <option value="">-- Add Item --</option>
-                                    {items.filter(item => !shoppingSession.items.find(si => si.itemId === item.id)).map(item => (
+                                    {inventory.filter(item => !shoppingSession.items.find(si => si.itemId === item.id)).map(item => (
                                         <option key={item.id} value={item.id}>{item.name}</option>
                                     ))}
                                 </select>
@@ -470,7 +466,7 @@ const Groceries = () => {
             <BottomSheet
                 isOpen={isModalOpen}
                 onClose={handleCancel}
-                title={currentItem ? 'Edit Item' : 'Add Master Item'}
+                title={currentItem ? 'Edit Item' : 'Add Item to Inventory'}
             >
                 <form onSubmit={handleAddItem}>
                     <div className="form-group">

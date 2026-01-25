@@ -15,7 +15,6 @@ const Meals = () => {
     const [recipes, setRecipes] = useLocalStorage('nestora_recipes', []);
     const [history, setHistory] = useLocalStorage('nestora_cooking_history', []);
     const [mealPlans, setMealPlans] = useLocalStorage('nestora_meal_plans', []);
-    const [masterItems] = useLocalStorage('nestora_master_items', []);
     const [inventory, setInventory] = useLocalStorage('nestora_inventory', []);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentRecipe, setCurrentRecipe] = useState(null);
@@ -88,7 +87,7 @@ const Meals = () => {
     };
 
     const addIngredient = (itemId) => {
-        const item = masterItems.find(i => i.id === itemId);
+        const item = inventory.find(i => i.id === itemId);
         if (item && !selectedIngredients.find(si => si.itemId === itemId)) {
             setSelectedIngredients([...selectedIngredients, { itemId: item.id, name: item.name }]);
         }
@@ -130,23 +129,9 @@ const Meals = () => {
         };
         setHistory([historyEntry, ...history]);
 
-        // Reduce inventory
-        let updatedInventory = [...inventory];
-        recipe.ingredients?.forEach(ing => {
-            const invIndex = updatedInventory.findIndex(i => i.itemId === ing.itemId);
-            if (invIndex !== -1) {
-                updatedInventory[invIndex] = {
-                    ...updatedInventory[invIndex],
-                    quantity: Math.max(0, updatedInventory[invIndex].quantity - 1)
-                };
-            }
-        });
-        const finalInventory = updatedInventory.filter(i => i.quantity > 0);
-        setInventory(finalInventory);
-
         setIsCookModalOpen(false);
         setRecipeToCook(null);
-        alert(`Logged "${recipe.title}"! Inventory updated.`);
+        alert(`Logged "${recipe.title}"!`);
     };
 
     const handleSavePlan = (e) => {
@@ -444,7 +429,7 @@ const Meals = () => {
                         <div className="ingredient-selector">
                             <select onChange={(e) => { addIngredient(e.target.value); e.target.value = ""; }}>
                                 <option value="">+ Add Ingredient</option>
-                                {masterItems.filter(mi => !selectedIngredients.find(si => si.itemId === mi.id)).map(item => (
+                                {inventory.filter(mi => !selectedIngredients.find(si => si.itemId === mi.id)).map(item => (
                                     <option key={item.id} value={item.id}>{item.name}</option>
                                 ))}
                             </select>

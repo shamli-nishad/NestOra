@@ -9,26 +9,22 @@
     gap: var(--space-md);
 }
 
-.inventory-card,
-.item-card {
+.inventory-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: var(--space-lg);
 }
 
-.inventory-card h3,
-.item-card h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-main);
-    margin-bottom: 2px;
+.inventory-card .info {
+    flex: 1;
+    cursor: pointer;
 }
 
-.inventory-card p,
-.item-card p {
-    font-size: 0.85rem;
-    color: var(--text-muted);
+.card-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
 }
 
 .qty-controls {
@@ -36,22 +32,26 @@
     align-items: center;
     gap: var(--space-md);
     background-color: #f1f5f9;
-    padding: 4px 12px;
+    padding: 2px 10px;
     border-radius: var(--radius-md);
 }
 
 .qty-controls button {
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 700;
     color: var(--primary);
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .qty-controls span {
     font-weight: 700;
-    min-width: 40px;
+    min-width: 30px;
     text-align: center;
+    font-size: 0.9rem;
 }
 
 .shopping-session {
